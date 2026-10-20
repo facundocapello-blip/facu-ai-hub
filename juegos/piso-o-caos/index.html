@@ -32,12 +32,12 @@ canvas{display:block;width:100%;height:auto;aspect-ratio:440/536;touch-action:ma
 <section class="scorebar" aria-label="Marcadores">
 <div class="stat"><small>PISO LISTO</small><strong id="progress">25%</strong></div>
 <div class="stat timer" id="timeBox"><small>QUEDA POCO</small><strong id="time">01:15</strong></div>
-<div class="stat"><small>GOTERAS</small><strong id="lives">♥ ♥ ♥</strong></div>
+<div class="stat"><small>VIDAS</small><strong id="lives">♥ ♥ ♥</strong></div>
 </section><div class="meter"><span id="fill"></span></div>
 <section class="canvasWrap" id="stage"><canvas id="game" width="880" height="1072" aria-label="Living visto en perspectiva. Tocá las tablas vacías para instalar piso vinílico."></canvas><div class="badge" id="weather">☁️ TORMENTA EN CAMINO</div><div class="toast" id="toast"></div>
-<div class="overlay" id="overlay"><div class="modal"><div class="eyebrow" id="eyebrow">MISIÓN 01 · TU LIVING</div><h1 id="title">PISO O <em>CAOS</em></h1><p id="desc">¡Se viene un diluvio y todavía se ve el granito! Colocá las tablas vinílicas antes de que entre el agua por el balcón.</p><div class="facts" id="facts"><div><b>👆</b>TOCÁ EL PISO</div><div><b>💧</b>FRENÁ GOTERAS</div><div><b>⚡</b>COMBO TURBO</div></div><button id="start" class="primary">¡A COLOCAR PISO!</button><div class="hint" id="modalHint">Solo 75 segundos. Tres goteras y perdés.</div></div></div>
+<div class="overlay" id="overlay"><div class="modal"><div class="eyebrow" id="eyebrow">MISIÓN 01 · TU LIVING</div><h1 id="title">PISO O <em>CAOS</em></h1><p id="desc">Se viene un diluvio... ¡y alguien tira colillas y vasos de fernet! Colocá el vinílico y limpiá las manchas antes de que arruinen el living.</p><div class="facts" id="facts"><div><b>👆</b>TOCÁ EL PISO</div><div><b>🚬 🥃</b>LIMPIÁ MANCHAS</div><div><b>💧</b>FRENÁ GOTERAS</div></div><button id="start" class="primary">¡A COLOCAR PISO!</button><div class="hint" id="modalHint">75 segundos · 3 vidas · tocá manchas para limpiarlas.</div></div></div>
 </section>
-<div class="controls"><div class="instruction"><b id="instruction">👆 Tocá las zonas de granito</b><span id="subtitle">Las tablas marrones ya están colocadas.</span></div><button id="turbo" class="turbo">⚡ TURBO 0/7</button></div>
+<div class="controls"><div class="instruction"><b id="instruction">👆 Tocá las zonas de granito</b><span id="subtitle">Colocá tablas y tocá las manchas para limpiar.</span></div><button id="turbo" class="turbo">⚡ TURBO 0/7</button></div>
 <div class="lower">BASADO EN TU LIVING REAL · <b>RÉCORD <span id="best">0</span></b> · JUEGO 2D</div>
 </main>
 <script>
@@ -46,7 +46,7 @@ canvas{display:block;width:100%;height:auto;aspect-ratio:440/536;touch-action:ma
 var canvas=document.getElementById('game'),ctx=canvas.getContext('2d');
 var W=440,H=536,ROWS=12,COLS=8,PIECES=ROWS/2*COLS;
 var els={overlay:document.getElementById('overlay'),title:document.getElementById('title'),desc:document.getElementById('desc'),eyebrow:document.getElementById('eyebrow'),facts:document.getElementById('facts'),hint:document.getElementById('modalHint'),start:document.getElementById('start'),pause:document.getElementById('pause'),sound:document.getElementById('sound'),time:document.getElementById('time'),timeBox:document.getElementById('timeBox'),progress:document.getElementById('progress'),fill:document.getElementById('fill'),lives:document.getElementById('lives'),weather:document.getElementById('weather'),turbo:document.getElementById('turbo'),toast:document.getElementById('toast'),instruction:document.getElementById('instruction'),subtitle:document.getElementById('subtitle'),best:document.getElementById('best')};
-var state='intro',boards=[],drops=[],score=0,lives=3,remaining=75,combo=0,streak=0,turbo=0,last=0,lastBoard=0,spawn=0,ticker=0,flashes=[],muted=false,audio=null,best=0,catAt=0,catX=-100,catOn=false,runId=0;
+var state='intro',boards=[],drops=[],litter=[],litterSpawn=0,litterCount=0,score=0,lives=3,remaining=75,combo=0,streak=0,turbo=0,last=0,lastBoard=0,spawn=0,ticker=0,flashes=[],muted=false,audio=null,best=0,catAt=0,catX=-100,catOn=false,runId=0;
 try{best=Number(localStorage.getItem('piso-o-caos-best')||0)}catch(e){}
 els.best.textContent=best;
 function rng(seed){var x=Math.sin(seed*123.12+71.11)*43758.5453;return x-Math.floor(x)}
@@ -97,33 +97,101 @@ ctx.restore();
 function drawDrops(t){
 for(var i=0;i<drops.length;i++){var d=drops[i],r=d.p*2+1,c=d.c,g=geo(r,c+.5),a=Math.max(0,Math.min(1,d.left/7)),pulse=Math.sin(t*6+i);ctx.save();ctx.shadowColor='#3affff';ctx.shadowBlur=14;ctx.fillStyle='#35c9ff44';ctx.beginPath();ctx.ellipse(g.x,g.y+11,23+pulse*3,9,0,0,7);ctx.fill();ctx.font='bold 29px sans-serif';ctx.textAlign='center';ctx.fillStyle='#d7fdff';ctx.fillText('💧',g.x,g.y+3+pulse*2);ctx.fillStyle='#133b59';roundrect(g.x-17,g.y-21,34,7,4,'#163e53');roundrect(g.x-16,g.y-20,32*a,5,3,a<.33?'#ff6970':'#6bffe2');ctx.restore()}
 }
+
+/* Basura que cae sobre las tablas terminadas. Las colillas chamuscan y el fernet salpica. */
+function cigarShape(){
+ctx.save();ctx.rotate(-.22);roundrect(-13,-3,27,7,2,'#edf0e4','#7c7263');roundrect(-13,-3,9,7,1,'#d79a4a','#9e6d36');roundrect(11,-3,3,7,1,'#dd6241');ctx.restore()}
+function cupShape(){
+ctx.save();ctx.fillStyle='#cce9f070';ctx.strokeStyle='#e0f6fa';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(-10,-14);ctx.lineTo(10,-14);ctx.lineTo(7,13);ctx.lineTo(-7,13);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle='#512b1dcf';ctx.beginPath();ctx.moveTo(-8,-4);ctx.lineTo(8,-4);ctx.lineTo(6,10);ctx.lineTo(-6,10);ctx.closePath();ctx.fill();ctx.fillStyle='#ebf9ffb0';ctx.fillRect(-5,-3,5,5);ctx.fillRect(2,1,3,5);line(1,-7,6,-25,'#b5f3ff',2);ctx.restore()}
+function drawLitter(t){
+for(var i=0;i<litter.length;i++){
+var d=litter[i],g=geo(d.p*2+1,d.c+.5),scale=.78+.25*(g.y-207)/329,fall=d.phase==='fall',v=fall?Math.min(1,d.fall/.87):1,pop=Math.sin(t*8+i);
+ctx.save();ctx.translate(g.x,g.y);ctx.scale(scale,scale);
+ctx.fillStyle=d.type==='fernet'?'#34190fb3':'#2e241eaa';ctx.beginPath();ctx.ellipse(0,7,(fall?9:24)+Math.max(0,pop)*2,fall?3:9,0,0,Math.PI*2);ctx.fill();
+if(!fall){
+ if(d.type==='fernet'){
+  ctx.fillStyle='#4a2219cb';ctx.beginPath();ctx.ellipse(0,9,23,8,-.2,0,Math.PI*2);ctx.fill();
+  for(var k=0;k<6;k++){var angle=k*1.13+.2;ctx.fillStyle=k%2?'#83503bb8':'#36180fb3';ctx.beginPath();ctx.ellipse(Math.cos(angle)*23,9+Math.sin(angle)*11,3.5,2.5,angle,0,Math.PI*2);ctx.fill()}
+  ctx.save();ctx.translate(10,0);ctx.rotate(1.13);cupShape();ctx.restore();
+ }else{
+  ctx.fillStyle='#242424c9';ctx.beginPath();ctx.ellipse(0,7,17,6,-.3,0,Math.PI*2);ctx.fill();
+  ctx.save();ctx.translate(0,0);cigarShape();ctx.restore();
+  ctx.strokeStyle='#eee7d6a0';ctx.lineWidth=1.7;ctx.beginPath();ctx.moveTo(11,-8);ctx.bezierCurveTo(17,-16,7,-22+pop*2,14,-29);ctx.stroke();
+  ctx.fillStyle='#ff6736';ctx.beginPath();ctx.arc(12,-3,2.5,0,Math.PI*2);ctx.fill();
+ }
+ var a=Math.max(0,Math.min(1,d.left/(d.type==='fernet'?10:9)));
+ roundrect(-19,-30,38,7,4,'#15202bd8');roundrect(-18,-29,36*a,5,3,a<.32?'#ff4f69':d.type==='fernet'?'#ffb05f':'#ffe191');
+}else{
+ ctx.save();ctx.translate(0,-(1-v)*(1-v)*155);ctx.rotate((1-v)*2.2);if(d.type==='fernet')cupShape();else cigarShape();ctx.restore();
+ ctx.strokeStyle=d.type==='fernet'?'#9bdcff88':'#ffbe7780';ctx.lineWidth=1.5;line(0,-43-(1-v)*130,0,-55-(1-v)*130,ctx.strokeStyle,ctx.lineWidth);
+}
+ctx.restore()
+}
+}
+function spawnLitter(){
+if(litter.length>=3)return;
+var options=[];for(var c=0;c<COLS;c++)for(var p=0;p<6;p++){
+if(boards[c*6+p]&&!litter.some(function(d){return d.c===c&&d.p===p}))options.push({c:c,p:p})}
+if(!options.length)return;
+var type=litterCount++%2===0?'cig':'fernet',index=Math.floor(rng(remaining*23+litterCount*17)*options.length),pos=options[index];
+litter.push({c:pos.c,p:pos.p,type:type,phase:'fall',fall:0,left:type==='fernet'?10:9});
+announce(type==='cig'?'🚬 ¡CAEN COLILLAS!':'🥃 ¡UN FERNET VOLANDO!');
+beep(type==='cig'?450:220,.18,'triangle',.045)
+}
+function clearLitter(c,p){
+var idx=litter.findIndex(function(d){return d.c===c&&d.p===p});
+if(idx<0)return false;
+var d=litter[idx],g=geo(p*2+1,c+.5);litter.splice(idx,1);
+var bonus=d.type==='fernet'?90:50;score+=bonus;turbo=Math.min(7,turbo+1);
+addFlash(g.x,g.y,'+'+bonus+' LIMPIO','#b3ffe8');
+announce(d.type==='fernet'?'🧽 ¡FERNET LIMPIO!':'🧹 ¡COLILLA RETIRADA!');
+beep(740,.17,'sine');vibrate();ui();maybeWin();return true
+}
+function advanceLitter(dt){
+for(var i=litter.length-1;i>=0;i--){
+var d=litter[i];
+if(d.phase==='fall'){d.fall+=dt;if(d.fall>=.87){d.phase='dirty';announce(d.type==='fernet'?'🥃 ¡FERNET DERRAMADO!':'🚬 ¡QUEMADURA EN EL PISO!')}continue}
+d.left-=dt;
+if(d.left<=0){
+litter.splice(i,1);lives--;streak=0;
+announce(d.type==='fernet'?'💔 ¡EL FERNET MANCHÓ TODO!':'💔 ¡LA COLILLA QUEMÓ EL PISO!');
+beep(105,.38,'sawtooth',.07);
+if(lives<=0){finish(false);return}
+}
+}
+}
+function maybeWin(){if(state==='playing'&&piecesDone()>=PIECES&&!litter.length&&!drops.length)finish(true)}
+
 function drawCat(t){
 if(!catOn)return;var x=catX,y=316+Math.sin(t*15)*4;ctx.save();ctx.translate(x,y);ctx.textAlign='center';ctx.shadowColor='#253140';ctx.shadowBlur=8;ctx.font='43px sans-serif';ctx.fillText('🐈',0,0);ctx.restore()}
 function drawAmbient(t){
 var danger=remaining<24&&state==='playing';if(danger){ctx.fillStyle='rgba(201,39,46,'+(.03+.02*Math.sin(t*7))+')';ctx.fillRect(0,0,W,H)}
 for(var i=0;i<flashes.length;i++){var f=flashes[i];ctx.save();ctx.globalAlpha=Math.min(1,f.life/.65);ctx.fillStyle=f.color;ctx.font='900 21px Barlow Condensed,sans-serif';ctx.textAlign='center';ctx.fillText(f.txt,f.x,f.y-f.age*45);ctx.restore()}
-if(state==='playing'){ctx.fillStyle='#152b3d';roundrect(111,181,220,22,6,'#182d40dd');ctx.fillStyle='#fff';ctx.textAlign='center';ctx.font='900 12px DM Sans,sans-serif';ctx.fillText(danger?'⛈️ ¡LA TORMENTA ESTÁ ENCIMA!':'👆 TOCÁ LAS TABLAS GRISES',220,196)}
+if(state==='playing'){ctx.fillStyle='#152b3d';roundrect(111,181,220,22,6,'#182d40dd');ctx.fillStyle='#fff';ctx.textAlign='center';ctx.font='900 12px DM Sans,sans-serif';ctx.fillText(danger?'⛈️ ¡LA TORMENTA ESTÁ ENCIMA!':litter.length?'🧽 ¡TOCÁ LAS MANCHAS PARA LIMPIAR!':'👆 TOCÁ LAS TABLAS GRISES',220,196)}
 }
-function draw(t){ctx.save();ctx.scale(2,2);ctx.clearRect(0,0,W,H);drawRoom();drawBoards();drawDrops(t);drawCat(t);drawAmbient(t);ctx.restore()}
+function draw(t){ctx.save();ctx.scale(2,2);ctx.clearRect(0,0,W,H);drawRoom();drawBoards();drawDrops(t);drawLitter(t);drawCat(t);drawAmbient(t);ctx.restore()}
 function beep(freq,duration,type,vol){if(muted)return;try{if(!audio)audio=new (window.AudioContext||window.webkitAudioContext)();if(audio.state==='suspended')audio.resume();var osc=audio.createOscillator(),gain=audio.createGain(),now=audio.currentTime;osc.type=type||'sine';osc.frequency.setValueAtTime(freq,now);osc.frequency.exponentialRampToValueAtTime(Math.max(90,freq*.76),now+duration);gain.gain.setValueAtTime(vol||.045,now);gain.gain.exponentialRampToValueAtTime(.001,now+duration);osc.connect(gain).connect(audio.destination);osc.start(now);osc.stop(now+duration+.02)}catch(e){}}
 function vibrate(){try{if(navigator.vibrate)navigator.vibrate(14)}catch(e){}}
 function announce(txt){els.toast.textContent=txt;els.toast.classList.add('show');clearTimeout(announce.timer);announce.timer=setTimeout(function(){els.toast.classList.remove('show')},980)}
 function ui(){var done=piecesDone(),pct=Math.floor(done/PIECES*100),s=Math.ceil(Math.max(0,remaining));els.progress.textContent=pct+'%';els.fill.style.width=pct+'%';els.time.textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');els.lives.textContent=('♥ '.repeat(lives)+'♡ '.repeat(3-lives)).trim();els.timeBox.classList.toggle('danger',s<=20);els.turbo.textContent=turbo>=7?'⚡ ¡TURBO LISTO!':'⚡ TURBO '+Math.floor(turbo)+'/7';els.turbo.classList.toggle('ready',turbo>=7&&state==='playing');els.weather.textContent=remaining<25?'⛈️ ALERTA ROJA · ¡YA VIENE!':'☁️ TORMENTA EN CAMINO';}
-function init(){runId++;boards=Array(PIECES).fill(false);for(var c=6;c<8;c++)for(var p=0;p<6;p++)boards[c*6+p]=true;drops=[];flashes=[];score=0;lives=3;remaining=75;turbo=0;combo=0;streak=0;spawn=0;catAt=0;catOn=false;catX=-100;lastBoard=0;ui();draw(0)}
-function show(type){state=type;els.overlay.hidden=false;els.facts.hidden=type!=='intro';els.hint.hidden=false;els.pause.textContent='Ⅱ';if(type==='intro'){els.eyebrow.textContent='MISIÓN 01 · TU LIVING';els.title.innerHTML='PISO O <em>CAOS</em>';els.desc.textContent='¡Se viene un diluvio y todavía se ve el granito! Colocá el vinílico antes de que entre el agua por el balcón.';els.start.textContent='¡A COLOCAR PISO!';els.hint.textContent='75 segundos · 3 goteras y perdés'}else if(type==='paused'){els.eyebrow.textContent='PAUSA DE OBRA';els.title.innerHTML='UN <em>RESPIRO</em>';els.desc.textContent='El temporal también está en pausa. Tu obra sigue intacta.';els.start.textContent='SEGUIR JUGANDO';els.hint.textContent='Tocá el piso para colocar tablas; tocá las gotas para secar.'}else{var won=type==='won';els.eyebrow.textContent=won?'¡MISIÓN CUMPLIDA!':'MISIÓN FALLIDA';els.title.innerHTML=won?'¡PISO <em>LISTO!</em>':'¡QUÉ <em>CAOS!</em>';els.desc.textContent=won?'¡Terminaste antes del diluvio! '+Math.ceil(remaining)+' segundos de ventaja. Puntos: '+score+'.':lives<=0?'Las goteras inundaron la obra. ¡Sacá la mopa y volvé a intentarlo!':'La tormenta llegó y quedó granito sin cubrir. ¡Probá otra vez!';els.start.textContent=won?'JUGAR OTRA VEZ':'REINTENTAR MISIÓN';els.hint.textContent='Récord personal: '+best+' puntos'}}
+function init(){runId++;boards=Array(PIECES).fill(false);for(var c=6;c<8;c++)for(var p=0;p<6;p++)boards[c*6+p]=true;drops=[];litter=[];litterSpawn=-2;litterCount=0;flashes=[];score=0;lives=3;remaining=75;turbo=0;combo=0;streak=0;spawn=0;catAt=0;catOn=false;catX=-100;lastBoard=0;ui();draw(0)}
+function show(type){state=type;els.overlay.hidden=false;els.facts.hidden=type!=='intro';els.hint.hidden=false;els.pause.textContent='Ⅱ';if(type==='intro'){els.eyebrow.textContent='MISIÓN 01 · TU LIVING';els.title.innerHTML='PISO O <em>CAOS</em>';els.desc.textContent='¡Se viene un diluvio! Colocá el vinílico mientras caen colillas y vasos de fernet. Tocá las manchas para limpiarlas antes de perder tus 3 vidas.';els.start.textContent='¡A COLOCAR PISO!';els.hint.textContent='75 segundos · Gotera, colilla o fernet sin limpiar = una vida menos'}else if(type==='paused'){els.eyebrow.textContent='PAUSA DE OBRA';els.title.innerHTML='UN <em>RESPIRO</em>';els.desc.textContent='El temporal también está en pausa. Tu obra sigue intacta.';els.start.textContent='SEGUIR JUGANDO';els.hint.textContent='Tocá granito para colocar tablas; tocá gotas, colillas y fernet para limpiar.'}else{var won=type==='won';els.eyebrow.textContent=won?'¡MISIÓN CUMPLIDA!':'MISIÓN FALLIDA';els.title.innerHTML=won?'¡PISO <em>LISTO!</em>':'¡QUÉ <em>CAOS!</em>';els.desc.textContent=won?'¡Terminaste antes del diluvio! '+Math.ceil(remaining)+' segundos de ventaja. Puntos: '+score+'.':lives<=0?'El agua, las colillas o el fernet arruinaron la obra. ¡Volvé a intentarlo!':'La tormenta llegó y quedó granito sin cubrir. ¡Probá otra vez!';els.start.textContent=won?'JUGAR OTRA VEZ':'REINTENTAR MISIÓN';els.hint.textContent='Récord personal: '+best+' puntos'}}
 function start(){if(state==='paused'){state='playing';els.overlay.hidden=true;last=performance.now();return}init();state='playing';els.overlay.hidden=true;last=performance.now();beep(660,.15,'triangle')}
 function finish(win){state=win?'won':'lost';if(win){score+=Math.ceil(remaining)*20+1000;beep(930,.36,'triangle',.08);setTimeout(function(){beep(1290,.3,'sine',.065)},220)}else beep(175,.42,'sawtooth',.055);if(score>best){best=score;els.best.textContent=best;try{localStorage.setItem('piso-o-caos-best',best)}catch(e){}}show(win?'won':'lost')}
 function addFlash(x,y,txt,color){flashes.push({x:x,y:y,txt:txt,color:color||'#fff2ac',life:.68,age:0})}
-function place(c,p){var id=c*6+p;if(boards[id]){beep(180,.09);return}var g=geo(p*2+1,c+.5);boards[id]=true;score+=100+Math.max(0,streak-1)*15;var now=performance.now();streak=now-lastBoard<1900?Math.min(8,streak+1):1;lastBoard=now;turbo=Math.min(7,turbo+1);addFlash(g.x,g.y,'+'+(100+Math.max(0,streak-1)*15),'#fcf6c1');beep(280+streak*55,.09,'triangle');vibrate();if(streak===6)announce('🔥 ¡RACHA PERFECTA!');ui();if(piecesDone()>=PIECES)finish(true)}
-function clearDrop(c,p){var idx=drops.findIndex(function(d){return d.c===c&&d.p===p});if(idx<0)return false;var g=geo(p*2+1,c+.5);drops.splice(idx,1);score+=60;turbo=Math.min(7,turbo+1);addFlash(g.x,g.y,'+60 SECADO','#91faff');beep(730,.19,'sine');announce('💧 ¡GOTERA FRENADA!');vibrate();ui();return true}
-function activateTurbo(){if(state!=='playing'||turbo<7)return;turbo=0;var count=0;for(var i=0;i<PIECES&&count<4;i++){var col=i%6,pc=(Math.floor(i/6)+3)%8,id=pc*6+col;if(!boards[id]){boards[id]=true;var g=geo(col*2+1,pc+.5);addFlash(g.x,g.y,'⚡','#adffdf');count++}}score+=count*140;streak=0;beep(1000,.34,'sawtooth',.06);announce('⚡ ¡TURBO! +'+count+' TABLAS');ui();if(piecesDone()>=PIECES)finish(true)}
-function selectAt(clientX,clientY){if(state!=='playing')return;var rect=canvas.getBoundingClientRect(),x=(clientX-rect.left)*W/rect.width,y=(clientY-rect.top)*H/rect.height;if(y<207||y>535)return;var t=(y-207)/329,left=75*(1-t),right=353+87*t,c=Math.floor((x-left)/(right-left)*COLS),r=Math.floor(t*ROWS);if(c<0||c>=COLS||r<0||r>=ROWS)return;var p=Math.min(5,Math.floor(r/2));if(!clearDrop(c,p))place(c,p)}
+function place(c,p){var id=c*6+p;if(boards[id]){beep(180,.09);return}var g=geo(p*2+1,c+.5);boards[id]=true;score+=100+Math.max(0,streak-1)*15;var now=performance.now();streak=now-lastBoard<1900?Math.min(8,streak+1):1;lastBoard=now;turbo=Math.min(7,turbo+1);addFlash(g.x,g.y,'+'+(100+Math.max(0,streak-1)*15),'#fcf6c1');beep(280+streak*55,.09,'triangle');vibrate();if(streak===6)announce('🔥 ¡RACHA PERFECTA!');ui();maybeWin()}
+function clearDrop(c,p){var idx=drops.findIndex(function(d){return d.c===c&&d.p===p});if(idx<0)return false;var g=geo(p*2+1,c+.5);drops.splice(idx,1);score+=60;turbo=Math.min(7,turbo+1);addFlash(g.x,g.y,'+60 SECADO','#91faff');beep(730,.19,'sine');announce('💧 ¡GOTERA FRENADA!');vibrate();ui();maybeWin();return true}
+function activateTurbo(){if(state!=='playing'||turbo<7)return;turbo=0;var count=0;for(var i=0;i<PIECES&&count<4;i++){var col=i%6,pc=(Math.floor(i/6)+3)%8,id=pc*6+col;if(!boards[id]){boards[id]=true;var g=geo(col*2+1,pc+.5);addFlash(g.x,g.y,'⚡','#adffdf');count++}}score+=count*140;streak=0;beep(1000,.34,'sawtooth',.06);announce('⚡ ¡TURBO! +'+count+' TABLAS');ui();maybeWin()}
+function selectAt(clientX,clientY){if(state!=='playing')return;var rect=canvas.getBoundingClientRect(),x=(clientX-rect.left)*W/rect.width,y=(clientY-rect.top)*H/rect.height;if(y<207||y>535)return;var t=(y-207)/329,left=75*(1-t),right=353+87*t,c=Math.floor((x-left)/(right-left)*COLS),r=Math.floor(t*ROWS);if(c<0||c>=COLS||r<0||r>=ROWS)return;var p=Math.min(5,Math.floor(r/2));if(!clearDrop(c,p)&&!clearLitter(c,p))place(c,p)}
 canvas.addEventListener('pointerdown',function(e){e.preventDefault();selectAt(e.clientX,e.clientY)});
 els.start.addEventListener('click',start);els.pause.addEventListener('click',function(){if(state==='playing'){show('paused')}else if(state==='paused'){start()}});els.turbo.addEventListener('click',activateTurbo);els.sound.addEventListener('click',function(){muted=!muted;els.sound.textContent=muted?'🔇':'🔊';if(!muted)beep(650,.13)});
 document.addEventListener('visibilitychange',function(){if(document.hidden&&state==='playing')show('paused')});
 window.addEventListener('keydown',function(e){if(e.key==='Escape'&&state==='playing')show('paused');else if(e.key===' '&&state==='playing'){e.preventDefault();activateTurbo()}});
-function step(now){var dt=Math.min(.06,Math.max(0,(now-last)/1000||0));last=now;var t=now/1000;if(state==='playing'){remaining-=dt;spawn+=dt;catAt+=dt;if(remaining<=0){remaining=0;finish(false)}else{
+function step(now){var dt=Math.min(.06,Math.max(0,(now-last)/1000||0));last=now;var t=now/1000;if(state==='playing'){remaining-=dt;spawn+=dt;litterSpawn+=dt;catAt+=dt;if(remaining<=0){remaining=0;finish(false)}else{
 if(spawn>=9){spawn=0;var available=[];for(var c=0;c<COLS;c++)for(var p=0;p<6;p++)if(!boards[c*6+p]&&!drops.some(function(d){return d.c===c&&d.p===p}))available.push({c:c,p:p});if(available.length){var e=available[Math.floor(rng(now*.15)*available.length)];drops.push({c:e.c,p:e.p,left:7.5});announce('💧 ¡GOTERA! ¡SECALA!');beep(160,.3,'sawtooth',.05)}}
+if(litterSpawn>=7.5){litterSpawn=0;spawnLitter()}
+advanceLitter(dt);
+if(state!=='playing'){ui();draw(t);requestAnimationFrame(step);return}
 for(var i=drops.length-1;i>=0;i--){drops[i].left-=dt;if(drops[i].left<=0){drops.splice(i,1);lives--;streak=0;announce('💔 ¡EL AGUA ENTRÓ!');beep(95,.45,'sawtooth',.08);if(lives<=0){finish(false);break}}}
 if(catAt>=27&&!catOn&&catX<0){catOn=true;catX=-45;announce('🐈 ¡EL GATO CRUZA LA OBRA!')}if(catOn){catX+=dt*170;if(catX>495){catOn=false;catX=-90;catAt=-5}}
 ui();
