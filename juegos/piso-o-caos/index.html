@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#101b2c">
+<title>PISO O CAOS · El diluvio del living</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=DM+Sans:wght@400;600;700;800&display=swap');
+:root{color-scheme:dark;--bg:#0c1424;--panel:#17263a;--muted:#9eafc1;--teal:#39e3bb;--orange:#ffaf50;--red:#ff536d}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:#f3f7fc;font-family:'DM Sans',system-ui,sans-serif;overscroll-behavior:none}body{background:radial-gradient(ellipse at 50% -30%,#314967 0,transparent 70%),#0c1424}button{-webkit-tap-highlight-color:transparent;cursor:pointer;font:inherit;touch-action:manipulation}button:focus-visible{outline:3px solid #79ffe0;outline-offset:3px}
+.shell{width:min(100%,510px);min-height:100dvh;margin:auto;padding:12px 14px max(13px,env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:9px}
+.head{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:50px}
+.brand{font:900 27px/0.88 'Barlow Condensed',Impact,sans-serif;letter-spacing:.7px;white-space:nowrap}.brand span{color:var(--orange)}.sub{font-size:9px;font-weight:800;color:#a8bed3;letter-spacing:2.8px;margin-top:6px}
+.topActions{display:flex;gap:7px}.iconbtn{width:37px;height:37px;display:grid;place-items:center;background:#24344b;color:#e6f5ff;border:1px solid #45617a;border-radius:12px;font-size:19px}
+.scorebar{display:grid;grid-template-columns:1fr 1.2fr 1fr;gap:7px}.stat{background:#18273b;border:1px solid #304159;border-radius:12px;padding:7px 8px 6px;text-align:center;box-shadow:0 5px 14px #060f1d33}.stat small{display:block;font-size:9px;color:#91a8bd;letter-spacing:1.3px;font-weight:800}.stat strong{display:block;font:800 29px/1 'Barlow Condensed',sans-serif;letter-spacing:.6px;margin-top:3px}.stat.timer strong{color:#ffcb7c}.stat.timer.danger strong{color:#ff536d;animation:blink .7s infinite alternate}@keyframes blink{to{opacity:.52}}#lives{letter-spacing:2px;font-size:24px}
+.meter{height:9px;background:#1c2c40;border:1px solid #35516a;border-radius:40px;overflow:hidden}.meter span{display:block;background:linear-gradient(90deg,#38bdaf,#82ffe3);height:100%;width:25%;transition:width .22s}
+.canvasWrap{position:relative;flex:1;min-height:0;width:100%;border:2px solid #51627d;border-radius:17px;overflow:hidden;box-shadow:0 11px 40px #0007,inset 0 0 30px #0003;background:#a6a7a8;touch-action:manipulation}
+canvas{display:block;width:100%;height:auto;aspect-ratio:440/536;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+.badge{position:absolute;top:10px;left:10px;z-index:1;color:#172838;background:#c9f9ebeb;border:1px solid #f4fffa;border-radius:20px;font-size:9px;font-weight:900;letter-spacing:1.5px;padding:6px 10px;pointer-events:none;box-shadow:0 4px 12px #0004}
+.toast{pointer-events:none;position:absolute;z-index:2;left:50%;top:44%;transform:translate(-50%,-50%) scale(.9);color:#172334;text-align:center;background:#faffd9ed;border:2px solid #fff8a3;padding:10px 16px;border-radius:13px;font:900 24px 'Barlow Condensed';opacity:0;transition:opacity .15s,transform .2s;white-space:nowrap;box-shadow:0 5px 25px #0005}.toast.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+.overlay{position:absolute;inset:0;z-index:3;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(180deg,#08152678,#081526db 45%,#071321ed);backdrop-filter:blur(3px);text-align:center}.overlay[hidden]{display:none}.modal{width:min(100%,325px);border:1px solid #6a7f98;background:linear-gradient(155deg,#192d43f5,#0c1b2eec);border-radius:19px;padding:19px 18px 18px;box-shadow:0 15px 48px #0008}.eyebrow{color:#ffbb67;font-size:11px;letter-spacing:3px;font-weight:900}.modal h1{font:900 clamp(37px,11vw,57px)/.9 'Barlow Condensed',sans-serif;margin:9px 0 13px;letter-spacing:.4px}.modal h1 em{color:var(--orange);font-style:normal}.modal p{font-size:13px;line-height:1.48;color:#c9d8e6;margin:7px 0 13px}.facts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin:13px 0}.facts div{background:#263b51;border-radius:10px;padding:7px 4px;font-size:10px;color:#dceaf2}.facts b{display:block;font-size:19px;margin-bottom:2px}
+.primary{width:100%;padding:13px 10px;border:0;background:linear-gradient(180deg,#ffe193,#ffaf50);border-radius:13px;color:#172233;font:900 25px 'Barlow Condensed',Impact,sans-serif;letter-spacing:1px;box-shadow:0 6px 0 #9a572d,0 10px 20px #0005}.primary:active{transform:translateY(3px);box-shadow:0 3px 0 #9a572d}
+.hint{font-size:10px;color:#91a6b8;margin-top:14px}
+.controls{display:grid;grid-template-columns:1fr auto;gap:9px;align-items:center}.instruction{min-width:0;color:#b4c6d8;line-height:1.32;font-size:11px}.instruction b{display:block;color:#eaf3ff;font-size:13px}.turbo{border:1px solid #466c75;background:#223946;color:#8eabb4;border-radius:12px;padding:10px 15px;font:900 18px 'Barlow Condensed';min-width:124px;white-space:nowrap}.turbo.ready{background:linear-gradient(130deg,#42ead1,#9cffcd);color:#113541;border-color:#baffeb;animation:glow .85s infinite alternate}@keyframes glow{to{box-shadow:0 0 17px #69ffcf88}}.lower{font-size:10px;text-align:center;color:#718ba2;min-height:16px}.lower b{color:#b2d3e5}
+@media(min-width:650px){.shell{padding-top:20px}.canvasWrap{flex:none}.lower{margin-top:4px}}
+@media(max-height:730px){.shell{gap:5px;padding-top:6px}.head{min-height:37px}.brand{font-size:23px}.sub{margin-top:3px}.scorebar .stat strong{font-size:25px}.canvasWrap{width:min(100%,380px);align-self:center}.modal{padding:12px}.controls{gap:5px}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body><main class="shell">
+<header class="head"><div><div class="brand">PISO <span>O</span> CAOS</div><div class="sub">EL DILUVIO DEL LIVING · EDICIÓN FACU</div></div><div class="topActions"><button id="sound" class="iconbtn" aria-label="Activar o silenciar sonido">🔊</button><button id="pause" class="iconbtn" aria-label="Pausar juego">Ⅱ</button></div></header>
+<section class="scorebar" aria-label="Marcadores">
+<div class="stat"><small>PISO LISTO</small><strong id="progress">25%</strong></div>
+<div class="stat timer" id="timeBox"><small>QUEDA POCO</small><strong id="time">01:15</strong></div>
+<div class="stat"><small>GOTERAS</small><strong id="lives">♥ ♥ ♥</strong></div>
+</section><div class="meter"><span id="fill"></span></div>
+<section class="canvasWrap" id="stage"><canvas id="game" width="880" height="1072" aria-label="Living visto en perspectiva. Tocá las tablas vacías para instalar piso vinílico."></canvas><div class="badge" id="weather">☁️ TORMENTA EN CAMINO</div><div class="toast" id="toast"></div>
+<div class="overlay" id="overlay"><div class="modal"><div class="eyebrow" id="eyebrow">MISIÓN 01 · TU LIVING</div><h1 id="title">PISO O <em>CAOS</em></h1><p id="desc">¡Se viene un diluvio y todavía se ve el granito! Colocá las tablas vinílicas antes de que entre el agua por el balcón.</p><div class="facts" id="facts"><div><b>👆</b>TOCÁ EL PISO</div><div><b>💧</b>FRENÁ GOTERAS</div><div><b>⚡</b>COMBO TURBO</div></div><button id="start" class="primary">¡A COLOCAR PISO!</button><div class="hint" id="modalHint">Solo 75 segundos. Tres goteras y perdés.</div></div></div>
+</section>
+<div class="controls"><div class="instruction"><b id="instruction">👆 Tocá las zonas de granito</b><span id="subtitle">Las tablas marrones ya están colocadas.</span></div><button id="turbo" class="turbo">⚡ TURBO 0/7</button></div>
+<div class="lower">BASADO EN TU LIVING REAL · <b>RÉCORD <span id="best">0</span></b> · JUEGO 2D</div>
+</main>
+<script>
+(function(){
+'use strict';
+var canvas=document.getElementById('game'),ctx=canvas.getContext('2d');
+var W=440,H=536,ROWS=12,COLS=8,PIECES=ROWS/2*COLS;
+var els={overlay:document.getElementById('overlay'),title:document.getElementById('title'),desc:document.getElementById('desc'),eyebrow:document.getElementById('eyebrow'),facts:document.getElementById('facts'),hint:document.getElementById('modalHint'),start:document.getElementById('start'),pause:document.getElementById('pause'),sound:document.getElementById('sound'),time:document.getElementById('time'),timeBox:document.getElementById('timeBox'),progress:document.getElementById('progress'),fill:document.getElementById('fill'),lives:document.getElementById('lives'),weather:document.getElementById('weather'),turbo:document.getElementById('turbo'),toast:document.getElementById('toast'),instruction:document.getElementById('instruction'),subtitle:document.getElementById('subtitle'),best:document.getElementById('best')};
+var state='intro',boards=[],drops=[],score=0,lives=3,remaining=75,combo=0,streak=0,turbo=0,last=0,lastBoard=0,spawn=0,ticker=0,flashes=[],muted=false,audio=null,best=0,catAt=0,catX=-100,catOn=false,runId=0;
+try{best=Number(localStorage.getItem('piso-o-caos-best')||0)}catch(e){}
+els.best.textContent=best;
+function rng(seed){var x=Math.sin(seed*123.12+71.11)*43758.5453;return x-Math.floor(x)}
+function roundrect(x,y,w,h,r,fill,stroke){ctx.beginPath();ctx.roundRect(x,y,w,h,r);if(fill){ctx.fillStyle=fill;ctx.fill()}if(stroke){ctx.strokeStyle=stroke;ctx.stroke()}}
+function line(x1,y1,x2,y2,color,width){ctx.strokeStyle=color;ctx.lineWidth=width;ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke()}
+function quad(ps,fill,stroke){ctx.beginPath();ctx.moveTo(ps[0].x,ps[0].y);for(var i=1;i<4;i++)ctx.lineTo(ps[i].x,ps[i].y);ctx.closePath();if(fill){ctx.fillStyle=fill;ctx.fill()}if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=1;ctx.stroke()}}
+function geo(r,c){var t=r/ROWS,left=75*(1-t),right=353+87*t;return{x:left+(right-left)*c/COLS,y:207+329*t}}
+function tile(r,c,h){return[geo(r,c),geo(r,c+1),geo(r+h,c+1),geo(r+h,c)]}
+function pieceID(r,c){return c*6+Math.floor(r/2)}
+function piecesDone(){var a=0;for(var i=0;i<PIECES;i++)a+=boards[i]?1:0;return a}
+function polygonFloor(){quad([{x:75,y:207},{x:353,y:207},{x:440,y:536},{x:0,y:536}],'#63676b','#333e42')}
+function drawRoom(){
+var g=ctx.createLinearGradient(0,0,0,220);g.addColorStop(0,'#e1e3e0');g.addColorStop(1,'#bfc3c2');ctx.fillStyle=g;ctx.fillRect(0,0,W,226);
+ctx.fillStyle='#f4f3ed';ctx.fillRect(0,0,W,35);
+line(0,10,440,10,'#d4d8d5',7);line(0,36,440,36,'#acb2af',2);
+roundrect(178,7,97,28,6,'#dce1dc','#a4a9a5');roundrect(194,26,62,3,2,'#6f7776');
+ctx.fillStyle='#c7d4dc';ctx.fillRect(103,55,242,152);
+ctx.fillStyle='#b8cad1';ctx.fillRect(111,62,226,137);
+ctx.fillStyle='#8cabb1';ctx.fillRect(120,95,214,106);
+for(var i=0;i<16;i++){var x=122+i*13;line(x,150,x+9,116,'#597e70',1.2)}
+ctx.fillStyle='#6f8d66';for(var i=0;i<22;i++){var x=120+i*9;roundrect(x,170-rng(i)*20,7,33+rng(i+23)*25,4,i%2?'#67865f':'#4d745e')}
+line(229,56,229,209,'#e3e8e4',6);line(108,152,341,152,'#d4dfe0',4);line(103,55,344,55,'#9ba6a5',5);
+ctx.fillStyle='#eeeeea';ctx.beginPath();ctx.moveTo(101,45);ctx.bezierCurveTo(110,105,122,124,136,174);ctx.bezierCurveTo(116,194,108,159,94,159);ctx.closePath();ctx.fill();ctx.beginPath();ctx.moveTo(344,45);ctx.bezierCurveTo(325,103,327,145,307,179);ctx.bezierCurveTo(331,183,342,161,353,150);ctx.closePath();ctx.fill();
+line(105,42,346,42,'#645147',4);
+ctx.fillStyle='#ddd7ca';ctx.fillRect(0,195,440,12);
+ctx.fillStyle='#e4e4e0';ctx.fillRect(0,38,95,166);ctx.fillRect(357,38,83,166);
+roundrect(3,103,63,93,4,'#242c39','#636567');roundrect(8,110,53,78,2,'#2b5946');ctx.fillStyle='#6db6a9';ctx.fillRect(8,155,53,7);ctx.fillStyle='#b6dbd2';ctx.font='bold 13px sans-serif';ctx.fillText('⚽',26,146);line(70,187,70,219,'#444d51',1.5);
+for(var j=0;j<20;j++){var yy=55+j*7;var xx=392+Math.sin(j*8)*15;ctx.fillStyle=j%3?'#346b49':'#5b8353';ctx.beginPath();ctx.ellipse(xx,yy,7,3.5,j*.6,0,Math.PI*2);ctx.fill();line(394,yy,xx,yy,'#58825b',.6)}
+ctx.fillStyle='#696a68';ctx.fillRect(0,204,440,6);
+polygonFloor();
+ctx.save();ctx.beginPath();ctx.moveTo(75,207);ctx.lineTo(353,207);ctx.lineTo(440,536);ctx.lineTo(0,536);ctx.closePath();ctx.clip();
+for(var i=0;i<710;i++){var px=rng(i+1)*W,py=207+rng(i+400)*340,rr=.4+rng(i+900)*4.3;ctx.fillStyle=['#b8b9b5','#a5adaf','#3c4247','#ddd8cc','#777575'][i%5];ctx.beginPath();ctx.ellipse(px,py,rr,rr*(.5+rng(i+9000)*1.2),rng(i)*3,0,7);ctx.fill()}
+for(var rr=0;rr<=ROWS;rr++){var aa=geo(rr,0),bb=geo(rr,COLS);line(aa.x,aa.y,bb.x,bb.y,'#4d5154',rr%2===0?1.5:.5)}
+ctx.restore();
+line(75,207,0,536,'#9fa6a3',3);line(353,207,440,536,'#8a9996',2);
+}
+function drawBoards(){
+for(var c=0;c<COLS;c++)for(var p=0;p<6;p++){
+var id=c*6+p;if(!boards[id])continue;
+var pp=tile(p*2,c,2),seed=c*17+p*11,n=rng(seed),col=['#a4774d','#b38456','#976b45','#bd9161','#af7c4c'][Math.floor(n*5)];
+ctx.save();ctx.shadowColor='#18212b88';ctx.shadowBlur=3;ctx.shadowOffsetY=2;quad(pp,col,'#6b503a');ctx.restore();
+ctx.save();ctx.beginPath();ctx.moveTo(pp[0].x,pp[0].y);ctx.lineTo(pp[1].x,pp[1].y);ctx.lineTo(pp[2].x,pp[2].y);ctx.lineTo(pp[3].x,pp[3].y);ctx.closePath();ctx.clip();
+for(var k=0;k<4;k++){var u=(k+1)/5,xt=pp[0].x+(pp[1].x-pp[0].x)*u,xb=pp[3].x+(pp[2].x-pp[3].x)*u,off=(rng(seed*30+k)-.5)*9;ctx.strokeStyle=k%2?'#dfae76aa':'#64472d66';ctx.lineWidth=.7+rng(k+seed)*1.1;ctx.beginPath();ctx.moveTo(xt+off,pp[0].y);ctx.bezierCurveTo(xt+off+6,pp[0].y+23,xb+off-7,pp[2].y-23,xb+off,pp[2].y);ctx.stroke()}
+var knx=(pp[0].x+pp[1].x+pp[2].x+pp[3].x)/4,kny=(pp[0].y+pp[2].y)/2;ctx.strokeStyle='#684b3066';ctx.lineWidth=.8;ctx.beginPath();ctx.ellipse(knx+8*rng(seed),kny,3+rng(seed+7)*3,8+rng(seed+2)*8,.12,0,Math.PI*2);ctx.stroke();
+ctx.restore();
+}
+}
+function drawDrops(t){
+for(var i=0;i<drops.length;i++){var d=drops[i],r=d.p*2+1,c=d.c,g=geo(r,c+.5),a=Math.max(0,Math.min(1,d.left/7)),pulse=Math.sin(t*6+i);ctx.save();ctx.shadowColor='#3affff';ctx.shadowBlur=14;ctx.fillStyle='#35c9ff44';ctx.beginPath();ctx.ellipse(g.x,g.y+11,23+pulse*3,9,0,0,7);ctx.fill();ctx.font='bold 29px sans-serif';ctx.textAlign='center';ctx.fillStyle='#d7fdff';ctx.fillText('💧',g.x,g.y+3+pulse*2);ctx.fillStyle='#133b59';roundrect(g.x-17,g.y-21,34,7,4,'#163e53');roundrect(g.x-16,g.y-20,32*a,5,3,a<.33?'#ff6970':'#6bffe2');ctx.restore()}
+}
+function drawCat(t){
+if(!catOn)return;var x=catX,y=316+Math.sin(t*15)*4;ctx.save();ctx.translate(x,y);ctx.textAlign='center';ctx.shadowColor='#253140';ctx.shadowBlur=8;ctx.font='43px sans-serif';ctx.fillText('🐈',0,0);ctx.restore()}
+function drawAmbient(t){
+var danger=remaining<24&&state==='playing';if(danger){ctx.fillStyle='rgba(201,39,46,'+(.03+.02*Math.sin(t*7))+')';ctx.fillRect(0,0,W,H)}
+for(var i=0;i<flashes.length;i++){var f=flashes[i];ctx.save();ctx.globalAlpha=Math.min(1,f.life/.65);ctx.fillStyle=f.color;ctx.font='900 21px Barlow Condensed,sans-serif';ctx.textAlign='center';ctx.fillText(f.txt,f.x,f.y-f.age*45);ctx.restore()}
+if(state==='playing'){ctx.fillStyle='#152b3d';roundrect(111,181,220,22,6,'#182d40dd');ctx.fillStyle='#fff';ctx.textAlign='center';ctx.font='900 12px DM Sans,sans-serif';ctx.fillText(danger?'⛈️ ¡LA TORMENTA ESTÁ ENCIMA!':'👆 TOCÁ LAS TABLAS GRISES',220,196)}
+}
+function draw(t){ctx.save();ctx.scale(2,2);ctx.clearRect(0,0,W,H);drawRoom();drawBoards();drawDrops(t);drawCat(t);drawAmbient(t);ctx.restore()}
+function beep(freq,duration,type,vol){if(muted)return;try{if(!audio)audio=new (window.AudioContext||window.webkitAudioContext)();if(audio.state==='suspended')audio.resume();var osc=audio.createOscillator(),gain=audio.createGain(),now=audio.currentTime;osc.type=type||'sine';osc.frequency.setValueAtTime(freq,now);osc.frequency.exponentialRampToValueAtTime(Math.max(90,freq*.76),now+duration);gain.gain.setValueAtTime(vol||.045,now);gain.gain.exponentialRampToValueAtTime(.001,now+duration);osc.connect(gain).connect(audio.destination);osc.start(now);osc.stop(now+duration+.02)}catch(e){}}
+function vibrate(){try{if(navigator.vibrate)navigator.vibrate(14)}catch(e){}}
+function announce(txt){els.toast.textContent=txt;els.toast.classList.add('show');clearTimeout(announce.timer);announce.timer=setTimeout(function(){els.toast.classList.remove('show')},980)}
+function ui(){var done=piecesDone(),pct=Math.floor(done/PIECES*100),s=Math.ceil(Math.max(0,remaining));els.progress.textContent=pct+'%';els.fill.style.width=pct+'%';els.time.textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');els.lives.textContent=('♥ '.repeat(lives)+'♡ '.repeat(3-lives)).trim();els.timeBox.classList.toggle('danger',s<=20);els.turbo.textContent=turbo>=7?'⚡ ¡TURBO LISTO!':'⚡ TURBO '+Math.floor(turbo)+'/7';els.turbo.classList.toggle('ready',turbo>=7&&state==='playing');els.weather.textContent=remaining<25?'⛈️ ALERTA ROJA · ¡YA VIENE!':'☁️ TORMENTA EN CAMINO';}
+function init(){runId++;boards=Array(PIECES).fill(false);for(var c=6;c<8;c++)for(var p=0;p<6;p++)boards[c*6+p]=true;drops=[];flashes=[];score=0;lives=3;remaining=75;turbo=0;combo=0;streak=0;spawn=0;catAt=0;catOn=false;catX=-100;lastBoard=0;ui();draw(0)}
+function show(type){state=type;els.overlay.hidden=false;els.facts.hidden=type!=='intro';els.hint.hidden=false;els.pause.textContent='Ⅱ';if(type==='intro'){els.eyebrow.textContent='MISIÓN 01 · TU LIVING';els.title.innerHTML='PISO O <em>CAOS</em>';els.desc.textContent='¡Se viene un diluvio y todavía se ve el granito! Colocá el vinílico antes de que entre el agua por el balcón.';els.start.textContent='¡A COLOCAR PISO!';els.hint.textContent='75 segundos · 3 goteras y perdés'}else if(type==='paused'){els.eyebrow.textContent='PAUSA DE OBRA';els.title.innerHTML='UN <em>RESPIRO</em>';els.desc.textContent='El temporal también está en pausa. Tu obra sigue intacta.';els.start.textContent='SEGUIR JUGANDO';els.hint.textContent='Tocá el piso para colocar tablas; tocá las gotas para secar.'}else{var won=type==='won';els.eyebrow.textContent=won?'¡MISIÓN CUMPLIDA!':'MISIÓN FALLIDA';els.title.innerHTML=won?'¡PISO <em>LISTO!</em>':'¡QUÉ <em>CAOS!</em>';els.desc.textContent=won?'¡Terminaste antes del diluvio! '+Math.ceil(remaining)+' segundos de ventaja. Puntos: '+score+'.':lives<=0?'Las goteras inundaron la obra. ¡Sacá la mopa y volvé a intentarlo!':'La tormenta llegó y quedó granito sin cubrir. ¡Probá otra vez!';els.start.textContent=won?'JUGAR OTRA VEZ':'REINTENTAR MISIÓN';els.hint.textContent='Récord personal: '+best+' puntos'}}
+function start(){if(state==='paused'){state='playing';els.overlay.hidden=true;last=performance.now();return}init();state='playing';els.overlay.hidden=true;last=performance.now();beep(660,.15,'triangle')}
+function finish(win){state=win?'won':'lost';if(win){score+=Math.ceil(remaining)*20+1000;beep(930,.36,'triangle',.08);setTimeout(function(){beep(1290,.3,'sine',.065)},220)}else beep(175,.42,'sawtooth',.055);if(score>best){best=score;els.best.textContent=best;try{localStorage.setItem('piso-o-caos-best',best)}catch(e){}}show(win?'won':'lost')}
+function addFlash(x,y,txt,color){flashes.push({x:x,y:y,txt:txt,color:color||'#fff2ac',life:.68,age:0})}
+function place(c,p){var id=c*6+p;if(boards[id]){beep(180,.09);return}var g=geo(p*2+1,c+.5);boards[id]=true;score+=100+Math.max(0,streak-1)*15;var now=performance.now();streak=now-lastBoard<1900?Math.min(8,streak+1):1;lastBoard=now;turbo=Math.min(7,turbo+1);addFlash(g.x,g.y,'+'+(100+Math.max(0,streak-1)*15),'#fcf6c1');beep(280+streak*55,.09,'triangle');vibrate();if(streak===6)announce('🔥 ¡RACHA PERFECTA!');ui();if(piecesDone()>=PIECES)finish(true)}
+function clearDrop(c,p){var idx=drops.findIndex(function(d){return d.c===c&&d.p===p});if(idx<0)return false;var g=geo(p*2+1,c+.5);drops.splice(idx,1);score+=60;turbo=Math.min(7,turbo+1);addFlash(g.x,g.y,'+60 SECADO','#91faff');beep(730,.19,'sine');announce('💧 ¡GOTERA FRENADA!');vibrate();ui();return true}
+function activateTurbo(){if(state!=='playing'||turbo<7)return;turbo=0;var count=0;for(var i=0;i<PIECES&&count<4;i++){var col=i%6,pc=(Math.floor(i/6)+3)%8,id=pc*6+col;if(!boards[id]){boards[id]=true;var g=geo(col*2+1,pc+.5);addFlash(g.x,g.y,'⚡','#adffdf');count++}}score+=count*140;streak=0;beep(1000,.34,'sawtooth',.06);announce('⚡ ¡TURBO! +'+count+' TABLAS');ui();if(piecesDone()>=PIECES)finish(true)}
+function selectAt(clientX,clientY){if(state!=='playing')return;var rect=canvas.getBoundingClientRect(),x=(clientX-rect.left)*W/rect.width,y=(clientY-rect.top)*H/rect.height;if(y<207||y>535)return;var t=(y-207)/329,left=75*(1-t),right=353+87*t,c=Math.floor((x-left)/(right-left)*COLS),r=Math.floor(t*ROWS);if(c<0||c>=COLS||r<0||r>=ROWS)return;var p=Math.min(5,Math.floor(r/2));if(!clearDrop(c,p))place(c,p)}
+canvas.addEventListener('pointerdown',function(e){e.preventDefault();selectAt(e.clientX,e.clientY)});
+els.start.addEventListener('click',start);els.pause.addEventListener('click',function(){if(state==='playing'){show('paused')}else if(state==='paused'){start()}});els.turbo.addEventListener('click',activateTurbo);els.sound.addEventListener('click',function(){muted=!muted;els.sound.textContent=muted?'🔇':'🔊';if(!muted)beep(650,.13)});
+document.addEventListener('visibilitychange',function(){if(document.hidden&&state==='playing')show('paused')});
+window.addEventListener('keydown',function(e){if(e.key==='Escape'&&state==='playing')show('paused');else if(e.key===' '&&state==='playing'){e.preventDefault();activateTurbo()}});
+function step(now){var dt=Math.min(.06,Math.max(0,(now-last)/1000||0));last=now;var t=now/1000;if(state==='playing'){remaining-=dt;spawn+=dt;catAt+=dt;if(remaining<=0){remaining=0;finish(false)}else{
+if(spawn>=9){spawn=0;var available=[];for(var c=0;c<COLS;c++)for(var p=0;p<6;p++)if(!boards[c*6+p]&&!drops.some(function(d){return d.c===c&&d.p===p}))available.push({c:c,p:p});if(available.length){var e=available[Math.floor(rng(now*.15)*available.length)];drops.push({c:e.c,p:e.p,left:7.5});announce('💧 ¡GOTERA! ¡SECALA!');beep(160,.3,'sawtooth',.05)}}
+for(var i=drops.length-1;i>=0;i--){drops[i].left-=dt;if(drops[i].left<=0){drops.splice(i,1);lives--;streak=0;announce('💔 ¡EL AGUA ENTRÓ!');beep(95,.45,'sawtooth',.08);if(lives<=0){finish(false);break}}}
+if(catAt>=27&&!catOn&&catX<0){catOn=true;catX=-45;announce('🐈 ¡EL GATO CRUZA LA OBRA!')}if(catOn){catX+=dt*170;if(catX>495){catOn=false;catX=-90;catAt=-5}}
+ui();
+}}
+for(var i=flashes.length-1;i>=0;i--){flashes[i].life-=dt;flashes[i].age+=dt;if(flashes[i].life<=0)flashes.splice(i,1)}draw(t);requestAnimationFrame(step)}
+init();show('intro');requestAnimationFrame(step);
+})();
+</script></body></html>
