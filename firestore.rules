@@ -1,0 +1,50 @@
+rules_version = '2';
+service cloud.firestore {
+ match /databases/{database}/documents {
+  function owner(uid) { return request.auth != null && request.auth.uid == uid; }
+  function str(v, max) { return v is string && v.size() <= max; }
+  function stamp(d) { return d.updatedAt is number && d.updatedAt >= 0; }
+  function identity(d,id) { return d.id == id && str(d.id,128); }
+  function priority(p) { return p in ['Alta','Media','Baja']; }
+  function project(d,id) {
+   return d.keys().hasAll(['id','name','category','priority','status','version','url','github','notes','next','updatedAt'])
+    && d.keys().hasOnly(['id','name','category','priority','status','version','url','github','notes','next','updatedAt'])
+    && identity(d,id) && stamp(d) && str(d.name,200) && d.name.size()>0 && str(d.category,200) && priority(d.priority)
+    && str(d.status,100) && str(d.version,100) && str(d.url,2048) && str(d.github,2048) && str(d.notes,10000) && str(d.next,1000);
+  }
+  function task(d,id) {
+   return d.keys().hasAll(['id','projectId','title','priority','status','updatedAt']) && d.keys().hasOnly(['id','projectId','title','priority','status','updatedAt'])
+    && identity(d,id) && stamp(d) && str(d.projectId,128) && d.projectId.size()>0 && str(d.title,220) && d.title.size()>0 && priority(d.priority)
+    && d.status in ['Pendiente','En curso','Terminado'];
+  }
+  function session(d,id) {
+   return d.keys().hasAll(['id','projectId','startedAt','runningSince','accumulatedMs','endedAt','updatedAt'])
+    && d.keys().hasOnly(['id','projectId','startedAt','runningSince','accumulatedMs','endedAt','updatedAt'])
+    && identity(d,id) && stamp(d) && str(d.projectId,128) && d.projectId.size()>0
+    && d.startedAt is number && d.startedAt>=0 && d.accumulatedMs is number && d.accumulatedMs>=0
+    && (d.runningSince==null || (d.runningSince is number && d.runningSince>=0))
+    && (d.endedAt==null || (d.endedAt is number && d.endedAt>=0 && d.runningSince==null));
+  }
+  function prompt(d,id) {
+   return d.keys().hasAll(['id','title','text','updatedAt']) && d.keys().hasOnly(['id','title','text','updatedAt'])
+    && identity(d,id) && stamp(d) && str(d.title,200) && d.title.size()>0 && str(d.text,10000);
+  }
+  match /users/{uid}/projects/{id} {
+   allow read, delete: if owner(uid);
+   allow create, update: if owner(uid) && project(request.resource.data,id);
+  }
+  match /users/{uid}/tasks/{id} {
+   allow read, delete: if owner(uid);
+   allow create, update: if owner(uid) && task(request.resource.data,id);
+  }
+  match /users/{uid}/sessions/{id} {
+   allow read, delete: if owner(uid);
+   allow create, update: if owner(uid) && session(request.resource.data,id);
+  }
+  match /users/{uid}/prompts/{id} {
+   allow read, delete: if owner(uid);
+   allow create, update: if owner(uid) && prompt(request.resource.data,id);
+  }
+  // Everything else, including backend rate limits, is denied to clients.
+ }
+}

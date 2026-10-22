@@ -1,0 +1,196 @@
+import { test, expect } from "@playwright/test";
+test("projects, tasks, recommendations and sessions persist on mobile", async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on("pageerror", (e) => errors.push(e.message));
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("./");
+  await expect(
+    page.getByRole("heading", { name: "Todo bajo control." }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Nuevo proyecto" }).click();
+  await page.getByLabel("Nombre", { exact: true }).fill("Proyecto de prueba");
+  await page.getByLabel("Contexto", { exact: true }).fill("Contexto personal");
+  await page.getByRole("button", { name: "Guardar proyecto" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Proyecto de prueba", exact: true }),
+  ).toBeVisible();
+  await page.reload();
+  await expect(
+    page.getByRole("heading", { name: "Proyecto de prueba", exact: true }),
+  ).toBeVisible();
+  await page
+    .getByLabel("Nueva tarea", { exact: true })
+    .fill("Corregir audio en iPhone");
+  await page
+    .getByLabel("Proyecto de la tarea", { exact: true })
+    .selectOption({ label: "Proyecto de prueba" });
+  await page.getByRole("button", { name: "Agregar", exact: true }).click();
+  await expect(
+    page.getByText("Corregir audio en iPhone", { exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Crear prompt para Corregir audio en iPhone" })
+    .click();
+  await page.getByRole("button", { name: "Recomendar flujo" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Codex", exact: true }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Guardar", exact: true }).click();
+  await page
+    .getByRole("navigation", { name: "Navegación móvil" })
+    .getByRole("button", { name: "Proyectos" })
+    .click();
+  await page
+    .getByRole("article")
+    .filter({
+      has: page.getByRole("heading", {
+        name: "Proyecto de prueba",
+        exact: true,
+      }),
+    })
+    .getByRole("button", { name: "Trackear" })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Pausar", exact: true }),
+  ).toBeVisible();
+  await page.waitForTimeout(1200);
+  await page.reload();
+  await page
+    .getByRole("navigation", { name: "Navegación móvil" })
+    .getByRole("button", { name: "Tracking" })
+    .click();
+  await page.getByRole("button", { name: "Pausar", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "Continuar", exact: true }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Finalizar", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "Tu próxima sesión" }),
+  ).toBeVisible();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+  expect(errors).toEqual([]);
+});
+test("PWA opens and edits data offline after a fresh page load", async ({
+  page,
+  context,
+}) => {
+  await page.goto("./");
+  await page.evaluate(() => navigator.serviceWorker.ready);
+  await page.reload();
+  await page.waitForFunction(() => navigator.serviceWorker.controller !== null);
+  await context.setOffline(true);
+  await page.goto("./");
+  await expect(
+    page.getByRole("heading", { name: "Todo bajo control." }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Nuevo proyecto" }).click();
+  await page.getByLabel("Nombre", { exact: true }).fill("Proyecto offline");
+  await page.getByRole("button", { name: "Guardar proyecto" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Proyecto offline", exact: true }),
+  ).toBeVisible();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await page.reload();
+  await expect(
+    page.getByRole("heading", { name: "Proyecto offline", exact: true }),
+  ).toBeVisible();
+  await context.setOffline(false);
+});
+test("migrates 4.5 data and tolerates corrupt localStorage", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    if (!sessionStorage.getItem("seeded")) {
+      localStorage.setItem(
+        "facu_hub_projects",
+        JSON.stringify([
+          {
+            id: "8",
+            name: "Mi SAP anterior",
+            category: "SAP",
+            priority: "Alta",
+            notes: "Mi contexto",
+          },
+        ]),
+      );
+      localStorage.setItem(
+        "facu_hub_tracking",
+        JSON.stringify({
+          projectId: "8",
+          active: true,
+          startTime: 1,
+          elapsed: 42,
+        }),
+      );
+      sessionStorage.setItem("seeded", "true");
+    }
+  });
+  await page.goto("./");
+  await expect(
+    page.getByRole("heading", { name: "Mi SAP anterior" }),
+  ).toBeVisible();
+  await page
+    .getByRole("navigation", { name: "Navegación principal" })
+    .getByRole("button", { name: "Tracking" })
+    .click();
+  await expect(page.getByLabel("Tiempo transcurrido")).toHaveText("00:00:42");
+  await expect(
+    page.getByRole("button", { name: "Continuar", exact: true }),
+  ).toBeVisible();
+});
+
+test("recovers corrupt legacy projects without deleting the original", async ({
+  page,
+}) => {
+  await page.addInitScript(() =>
+    localStorage.setItem("facu_hub_projects", "{broken"),
+  );
+  await page.goto("./");
+  await expect(
+    page.getByRole("heading", { name: "Henris Gallery", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText(
+      "No se pudo leer facu_hub_projects; el original se conserva.",
+      { exact: true },
+    ),
+  ).toBeVisible();
+  expect(
+    await page.evaluate(() => localStorage.getItem("facu_hub_projects")),
+  ).toBe("{broken");
+});
+
+test("independent local tabs retain each other’s writes", async ({
+  page,
+  context,
+}) => {
+  await page.goto("./");
+  await expect(
+    page.getByRole("heading", { name: "Henris Gallery", exact: true }),
+  ).toBeVisible();
+  const second = await context.newPage();
+  await second.goto("./");
+  await expect(
+    second.getByRole("heading", { name: "Henris Gallery", exact: true }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Nuevo proyecto" }).click();
+  await page.getByLabel("Nombre", { exact: true }).fill("Proyecto compartido");
+  await page.getByRole("button", { name: "Guardar proyecto" }).click();
+  await expect(
+    second.getByRole("heading", { name: "Proyecto compartido", exact: true }),
+  ).toBeVisible();
+  await second
+    .getByLabel("Nueva tarea", { exact: true })
+    .fill("Tarea desde otra pestaña");
+  await second.getByRole("button", { name: "Agregar", exact: true }).click();
+  await expect(
+    page.getByText("Tarea desde otra pestaña", { exact: true }),
+  ).toBeVisible();
+  await second.close();
+});

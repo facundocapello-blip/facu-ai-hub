@@ -1,0 +1,44 @@
+{
+  "name": "facu-ai-hub",
+  "version": "5.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "test": "vitest run",
+    "test:rules": "firebase emulators:exec --only firestore --project demo-facu-hub 'vitest run --config vitest.rules.config.ts'",
+    "test:e2e": "playwright test",
+    "test:cloud": "firebase emulators:exec --only auth,firestore --project demo-facu-hub \"playwright test --config playwright.cloud.config.ts\"",
+    "test:auth": "firebase emulators:exec --only auth --project demo-facu-hub \"vitest run --config vitest.auth.config.ts\""
+  },
+  "dependencies": {
+    "firebase": "^12.4.0",
+    "idb": "^8.0.3",
+    "lucide-react": "^0.468.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^5.0.0",
+    "@playwright/test": "^1.56.0",
+    "@tailwindcss/vite": "^4.1.0",
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@vitejs/plugin-react": "^5.0.4",
+    "firebase-tools": "^14.20.0",
+    "prettier": "^3.9.10",
+    "tailwindcss": "^4.1.0",
+    "typescript": "~5.9.3",
+    "vite": "^7.1.0",
+    "vite-plugin-pwa": "^1.1.0",
+    "vitest": "^3.2.0"
+  },
+  "overrides": {
+    "@firebase/firestore": {
+      "@grpc/grpc-js": "^1.14.6"
+    }
+  }
+}
