@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-test("projects, tasks, recommendations and sessions persist on mobile", async ({
+test("projects, tasks and recommendations persist on mobile without tracking", async ({
   page,
 }) => {
   const errors: string[] = [];
@@ -42,33 +42,13 @@ test("projects, tasks, recommendations and sessions persist on mobile", async ({
     .getByRole("navigation", { name: "Navegación móvil" })
     .getByRole("button", { name: "Proyectos" })
     .click();
-  await page
-    .getByRole("article")
-    .filter({
-      has: page.getByRole("heading", {
-        name: "Proyecto de prueba",
-        exact: true,
-      }),
-    })
-    .getByRole("button", { name: "Trackear" })
-    .click();
   await expect(
-    page.getByRole("button", { name: "Pausar", exact: true }),
-  ).toBeVisible();
-  await page.waitForTimeout(1200);
-  await page.reload();
-  await page
-    .getByRole("navigation", { name: "Navegación móvil" })
-    .getByRole("button", { name: "Tracking" })
-    .click();
-  await page.getByRole("button", { name: "Pausar", exact: true }).click();
+    page.getByRole("button", { name: "Trackear", exact: true }),
+  ).toHaveCount(0);
   await expect(
-    page.getByRole("button", { name: "Continuar", exact: true }),
-  ).toBeVisible();
-  await page.getByRole("button", { name: "Finalizar", exact: true }).click();
-  await expect(
-    page.getByRole("heading", { name: "Tu próxima sesión" }),
-  ).toBeVisible();
+    page.getByRole("button", { name: "Tracking", exact: true }),
+  ).toHaveCount(0);
+  await expect(page.getByText("SESIÓN ACTUAL", { exact: true })).toHaveCount(0);
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= innerWidth,
@@ -135,14 +115,14 @@ test("migrates 4.5 data and tolerates corrupt localStorage", async ({
   await expect(
     page.getByRole("heading", { name: "Mi SAP anterior" }),
   ).toBeVisible();
-  await page
-    .getByRole("navigation", { name: "Navegación principal" })
-    .getByRole("button", { name: "Tracking" })
-    .click();
-  await expect(page.getByLabel("Tiempo transcurrido")).toHaveText("00:00:42");
   await expect(
-    page.getByRole("button", { name: "Continuar", exact: true }),
-  ).toBeVisible();
+    page.getByRole("button", { name: "Tracking", exact: true }),
+  ).toHaveCount(0);
+  expect(
+    await page.evaluate(
+      () => JSON.parse(localStorage.getItem("facu_hub_tracking")!).elapsed,
+    ),
+  ).toBe(42);
 });
 
 test("recovers corrupt legacy projects without deleting the original", async ({
@@ -273,11 +253,9 @@ test("V5.1 priorities, chat links, offline postponement and task resolution", as
       () => document.documentElement.scrollWidth <= innerWidth,
     ),
   ).toBe(true);
-  const mamba = page
-    .getByRole("article")
-    .filter({
-      has: page.getByRole("heading", { name: "Mambapalabra", exact: true }),
-    });
+  const mamba = page.getByRole("article").filter({
+    has: page.getByRole("heading", { name: "Mambapalabra", exact: true }),
+  });
   await expect(
     mamba.getByRole("button", { name: "Agregar enlace" }),
   ).toBeVisible();

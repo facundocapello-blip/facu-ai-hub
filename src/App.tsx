@@ -5,15 +5,12 @@ import {
   LayoutGrid,
   Sparkles,
   BookOpen,
-  Timer as TimerIcon,
   Settings,
   ArrowUpRight,
   Search,
   Plus,
   ChevronRight,
   Play,
-  Pause,
-  Square,
   Download,
   Upload,
   LogOut,
@@ -42,21 +39,13 @@ import {
   type Intent,
   type Recommendation,
 } from "./lib/intents";
-import {
-  elapsedMs,
-  formatDuration,
-  pauseSession,
-  resumeSession,
-} from "./lib/tracking";
 import { readWorkspace, validateWorkspace } from "./lib/storage";
 import { seedWorkspace } from "./lib/seeds";
-import { Timer } from "./components/Timer";
 import { Modal } from "./components/Modal";
 const tabs = [
   { id: "projects", label: "Proyectos", icon: LayoutGrid },
   { id: "ia", label: "IA Hub", icon: Sparkles },
   { id: "prompts", label: "Prompts", icon: BookOpen },
-  { id: "tracking", label: "Tracking", icon: TimerIcon },
   { id: "settings", label: "Ajustes", icon: Settings },
 ] as const;
 type Tab = (typeof tabs)[number]["id"];
@@ -115,7 +104,6 @@ export default function App() {
       store.setError("No se pudo preparar el modo sin conexión. " + message(e));
     },
   });
-  const active = data.sessions.find((s) => s.endedAt === null);
   const openCount = data.tasks.filter((t) => t.status !== "Terminado").length;
   const search = query.trim().toLocaleLowerCase("es");
   const matches = (...values: string[]) =>
@@ -151,27 +139,6 @@ export default function App() {
     a.download = `facu-hub-5-${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     setTimeout(() => URL.revokeObjectURL(url), 2000);
-  }
-  async function startTracking(projectId: string) {
-    if (!projectId) throw Error("Elegí un proyecto.");
-    if (active) {
-      setTab("tracking");
-      setNotice(
-        "Ya tenés una sesión abierta. Finalizala antes de iniciar otra.",
-      );
-      return;
-    }
-    const now = Date.now();
-    await store.put("sessions", {
-      id: uid(),
-      projectId,
-      startedAt: now,
-      runningSince: now,
-      accumulatedMs: 0,
-      endedAt: null,
-      updatedAt: now,
-    });
-    setTab("tracking");
   }
   async function recommend(e: FormEvent) {
     e.preventDefault();
@@ -260,7 +227,6 @@ export default function App() {
             >
               <t.icon size={19} />
               {t.label}
-              {t.id === "tracking" && active && <i className="live-dot" />}
             </button>
           ))}
         </nav>
@@ -311,33 +277,27 @@ export default function App() {
                   ? "PANORAMA GENERAL"
                   : tab === "ia"
                     ? "TU PRÓXIMO PASO"
-                    : tab === "tracking"
-                      ? "TIEMPO CON INTENCIÓN"
-                      : tab === "prompts"
-                        ? "INSTRUCCIONES QUE FUNCIONAN"
-                        : "TU ESPACIO, TUS DATOS"}
+                    : tab === "prompts"
+                      ? "INSTRUCCIONES QUE FUNCIONAN"
+                      : "TU ESPACIO, TUS DATOS"}
               </span>
               <h1>
                 {tab === "projects"
                   ? "Todo bajo control."
                   : tab === "ia"
                     ? "Decidí tu próximo paso."
-                    : tab === "tracking"
-                      ? "Enfocate en lo importante."
-                      : tab === "prompts"
-                        ? "Tu biblioteca de prompts."
-                        : "Ajustes del espacio."}
+                    : tab === "prompts"
+                      ? "Tu biblioteca de prompts."
+                      : "Ajustes del espacio."}
               </h1>
               <p>
                 {tab === "projects"
                   ? "Tus proyectos, tus prioridades y lo que viene. En un solo lugar."
                   : tab === "ia"
                     ? "Prioridades de tu espacio y continuidad manual con ChatGPT."
-                    : tab === "tracking"
-                      ? "Sesiones precisas, incluso cuando bloqueás la pantalla."
-                      : tab === "prompts"
-                        ? "Guardá las instrucciones que querés volver a usar."
-                        : "Controlá dónde se guardan tus datos y cómo se sincronizan."}
+                    : tab === "prompts"
+                      ? "Guardá las instrucciones que querés volver a usar."
+                      : "Controlá dónde se guardan tus datos y cómo se sincronizan."}
               </p>
             </div>
             {tab === "projects" && (
@@ -441,22 +401,6 @@ export default function App() {
                       <strong>{openCount.toString().padStart(2, "0")}</strong>
                       <small>Tareas pendientes</small>
                     </div>
-                    <div>
-                      <span>SESIÓN ACTUAL</span>
-                      <strong className="metric-status">
-                        {active
-                          ? active.runningSince
-                            ? "En foco"
-                            : "En pausa"
-                          : "Disponible"}
-                      </strong>
-                      <small>
-                        {active
-                          ? data.projects.find((p) => p.id === active.projectId)
-                              ?.name
-                          : "Un buen momento para empezar"}
-                      </small>
-                    </div>
                   </div>
                   <section>
                     <div className="section-title">
@@ -539,16 +483,6 @@ export default function App() {
                                   </a>
                                 )}
                               </div>
-                              <button
-                                className="track-button"
-                                disabled={saving}
-                                onClick={() =>
-                                  void run(() => startTracking(p.id))
-                                }
-                              >
-                                <TimerIcon size={14} />
-                                Trackear
-                              </button>
                             </div>
                           </article>
                         ))}
@@ -919,147 +853,6 @@ export default function App() {
                   )}
                 </>
               )}
-              {tab === "tracking" &&
-                data.sessions.filter((s) => s.endedAt === null).length > 1 && (
-                  <div className="banner error">
-                    Hay sesiones abiertas en varios dispositivos. Finalizá cada
-                    una antes de iniciar otra; ninguna se borró.
-                  </div>
-                )}
-              {tab === "tracking" && (
-                <div className="two-columns">
-                  <section className="panel tracking-panel">
-                    <span className="eyebrow">UNA COSA A LA VEZ</span>
-                    <h2>
-                      {active
-                        ? data.projects.find((p) => p.id === active.projectId)
-                            ?.name
-                        : "Tu próxima sesión"}
-                    </h2>
-                    {active ? (
-                      <>
-                        <div
-                          className={`clock ${active.runningSince ? "running" : ""}`}
-                        >
-                          <Timer session={active} />
-                          <span>
-                            {active.runningSince ? "EN FOCO" : "EN PAUSA"}
-                          </span>
-                        </div>
-                        <div className="button-row">
-                          <button
-                            className="button primary"
-                            disabled={saving}
-                            onClick={() =>
-                              void run(() =>
-                                store.put(
-                                  "sessions",
-                                  active.runningSince
-                                    ? pauseSession(active)
-                                    : resumeSession(active),
-                                ),
-                              )
-                            }
-                          >
-                            {active.runningSince ? (
-                              <Pause size={17} />
-                            ) : (
-                              <Play size={17} />
-                            )}{" "}
-                            {active.runningSince ? "Pausar" : "Continuar"}
-                          </button>
-                          <button
-                            className="button secondary"
-                            disabled={saving}
-                            onClick={() =>
-                              void run(() =>
-                                store.put("sessions", {
-                                  ...pauseSession(active),
-                                  endedAt: Date.now(),
-                                }),
-                              )
-                            }
-                          >
-                            <Square size={15} />
-                            Finalizar
-                          </button>
-                        </div>
-                        <p className="muted small">
-                          El tiempo se calcula desde el inicio de la sesión,
-                          incluso en segundo plano. Una sesión por vez; evitá
-                          iniciarlas en varios dispositivos simultáneamente.
-                        </p>
-                      </>
-                    ) : (
-                      <form
-                        onSubmit={(e) => {
-                          e.preventDefault();
-                          void run(() =>
-                            startTracking(taskProject || data.projects[0]?.id),
-                          );
-                        }}
-                      >
-                        <div className="clock">
-                          <span className="timer">00:00:00</span>
-                          <span>LISTO PARA EMPEZAR</span>
-                        </div>
-                        <label>
-                          Proyecto
-                          <select
-                            value={taskProject || data.projects[0]?.id || ""}
-                            required
-                            onChange={(e) => setTaskProject(e.target.value)}
-                          >
-                            {data.projects.map((p) => (
-                              <option key={p.id} value={p.id}>
-                                {p.name}
-                              </option>
-                            ))}
-                          </select>
-                        </label>
-                        <button
-                          className="button primary full"
-                          disabled={saving || !data.projects.length}
-                        >
-                          <Play size={17} />
-                          Iniciar sesión de foco
-                        </button>
-                      </form>
-                    )}
-                  </section>
-                  <section className="panel">
-                    <h2>Sesiones recientes</h2>
-                    <p className="muted small">
-                      Tiempo registrado por proyecto.
-                    </p>
-                    {[...data.sessions]
-                      .filter((s) => s.endedAt !== null)
-                      .sort((a, b) => (b.endedAt || 0) - (a.endedAt || 0))
-                      .slice(0, 30)
-                      .map((s) => (
-                        <div className="history-row" key={s.id}>
-                          <div>
-                            <strong>
-                              {
-                                data.projects.find((p) => p.id === s.projectId)
-                                  ?.name
-                              }
-                            </strong>
-                            <small>
-                              {new Date(s.startedAt).toLocaleString("es-AR")}
-                            </small>
-                          </div>
-                          <span>{formatDuration(elapsedMs(s))}</span>
-                        </div>
-                      ))}
-                    {!data.sessions.some((s) => s.endedAt !== null) && (
-                      <div className="empty">
-                        Finalizá tu primera sesión para verla acá.
-                      </div>
-                    )}
-                  </section>
-                </div>
-              )}
               {tab === "settings" && (
                 <div className="two-columns">
                   <div className="stack">
@@ -1225,8 +1018,8 @@ export default function App() {
                     <section className="panel">
                       <h2>Respaldo de tu espacio</h2>
                       <p className="muted">
-                        Exportá proyectos, tareas, prompts y sesiones. El
-                        archivo incluye tus notas: guardalo en un lugar seguro.
+                        Exportá proyectos, tareas y prompts. El archivo incluye
+                        tus notas: guardalo en un lugar seguro.
                       </p>
                       <div className="button-row">
                         <button
@@ -1359,7 +1152,6 @@ export default function App() {
           >
             <t.icon size={21} />
             <span>{t.label}</span>
-            {t.id === "tracking" && active && <i className="live-dot" />}
           </button>
         ))}
       </nav>
