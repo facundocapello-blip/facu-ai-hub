@@ -1,3 +1,5 @@
+import { Assistant, Continuation } from "./components/Assistant";
+import { validChatUrl } from "./lib/assistant";
 import { useRef, useState, type FormEvent } from "react";
 import {
   LayoutGrid,
@@ -82,6 +84,7 @@ const blankProject = (): Project => ({
 export default function App() {
   const store = useWorkspace();
   const { data, user, ready, online, pending, cached } = store;
+  const [continuing, setContinuing] = useState<Project | null>(null);
   const [tab, setTab] = useState<Tab>("projects");
   const [query, setQuery] = useState("");
   const [editing, setEditing] = useState<Project | null>(null);
@@ -262,7 +265,7 @@ export default function App() {
           ))}
         </nav>
         <div className="sidebar-bottom">
-          <span className="badge">VERSIÓN 5.0</span>
+          <span className="badge">VERSIÓN 5.1 STAGING</span>
           <p>
             Menos ruido.
             <br />
@@ -280,7 +283,7 @@ export default function App() {
               <Zap size={19} fill="currentColor" />
             </span>
             <strong>
-              FACU AI HUB <small>5.0</small>
+              FACU AI HUB <small>5.1 STAGING</small>
             </strong>
           </div>
           <span className="desktop-eyebrow">TU ESPACIO DE TRABAJO</span>
@@ -318,7 +321,7 @@ export default function App() {
                 {tab === "projects"
                   ? "Todo bajo control."
                   : tab === "ia"
-                    ? "Elegí mejor tu IA."
+                    ? "Decidí tu próximo paso."
                     : tab === "tracking"
                       ? "Enfocate en lo importante."
                       : tab === "prompts"
@@ -329,7 +332,7 @@ export default function App() {
                 {tab === "projects"
                   ? "Tus proyectos, tus prioridades y lo que viene. En un solo lugar."
                   : tab === "ia"
-                    ? "Contame el objetivo. Encontramos la herramienta y el camino."
+                    ? "Prioridades de tu espacio y continuidad manual con ChatGPT."
                     : tab === "tracking"
                       ? "Sesiones precisas, incluso cuando bloqueás la pantalla."
                       : tab === "prompts"
@@ -500,6 +503,20 @@ export default function App() {
                                 <ChevronRight size={15} />
                                 <span>{p.next}</span>
                               </div>
+                            )}
+                            <button
+                              className="button secondary full"
+                              onClick={() => setContinuing(p)}
+                            >
+                              Continuar con ChatGPT
+                            </button>
+                            {!p.chatUrl && (
+                              <button
+                                className="text-button"
+                                onClick={() => setEditing({ ...p })}
+                              >
+                                Agregar enlace
+                              </button>
                             )}
                             <div className="card-footer">
                               <div className="project-links">
@@ -688,148 +705,167 @@ export default function App() {
                 </>
               )}
               {tab === "ia" && (
-                <div className="two-columns">
-                  <section className="panel">
-                    <div className="panel-icon">
-                      <Sparkles size={23} />
-                    </div>
-                    <h2>Asistente de trabajo</h2>
-                    <p className="muted">
-                      Clasifica tu intención y prepara una instrucción con
-                      contexto. Vos decidís qué ejecutar.
-                    </p>
-                    <form onSubmit={(e) => void recommend(e)}>
-                      <label>
-                        Proyecto
-                        <select
-                          value={aiProject || data.projects[0]?.id || ""}
-                          onChange={(e) => {
-                            setAIProject(e.target.value);
-                            setRec(null);
-                          }}
-                          required
-                        >
-                          {data.projects.map((p) => (
-                            <option key={p.id} value={p.id}>
-                              {p.name}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                      <label>
-                        ¿Qué querés hacer?
-                        <textarea
-                          placeholder="Ej.: Corregir el audio online en iPhone sin tocar producción…"
-                          value={goal}
-                          maxLength={4000}
-                          onChange={(e) => {
-                            setGoal(e.target.value);
-                            setRec(null);
-                          }}
-                          required
-                          rows={6}
-                        />
-                      </label>
-                      {import.meta.env.VITE_AI_ENDPOINT && (
-                        <label className="checkbox-label">
-                          <input
-                            type="checkbox"
-                            checked={useModel}
-                            onChange={(e) => setUseModel(e.target.checked)}
-                          />
-                          Usar modelo remoto (envía solo el objetivo; puede
-                          consumir cuota)
-                        </label>
-                      )}
-                      <button
-                        className="button primary full"
-                        disabled={
-                          aiBusy || !goal.trim() || !data.projects.length
-                        }
-                      >
-                        <Sparkles size={17} />
-                        {aiBusy ? "Analizando…" : "Recomendar flujo"}
-                      </button>
-                    </form>
-                  </section>
-                  <section
-                    className={`panel recommendation ${rec ? "" : "awaiting"}`}
-                    aria-live="polite"
-                  >
-                    {rec ? (
-                      <>
-                        <span className="eyebrow">
-                          {rec.source === "local"
-                            ? "REGLAS LOCALES · SIN COSTO DE API"
-                            : "CLASIFICACIÓN CON MODELO"}
-                        </span>
-                        <h2>{rec.tool}</h2>
-                        <p>{rec.reason}</p>
-                        <div className="next-step">
-                          <ChevronRight size={16} />
-                          {rec.next}
-                        </div>
+                <>
+                  <Assistant
+                    data={data}
+                    source={
+                      !user
+                        ? "datos locales"
+                        : cached || pending || !online
+                          ? "caché de cuenta · sincronización pendiente"
+                          : "datos sincronizados"
+                    }
+                    put={store.put}
+                    edit={setEditing}
+                    continueProject={setContinuing}
+                    run={run}
+                    saving={saving}
+                  />
+                  <div className="two-columns">
+                    <section className="panel">
+                      <div className="panel-icon">
+                        <Sparkles size={23} />
+                      </div>
+                      <h2>Asistente de trabajo</h2>
+                      <p className="muted">
+                        Clasifica tu intención y prepara una instrucción con
+                        contexto. Vos decidís qué ejecutar.
+                      </p>
+                      <form onSubmit={(e) => void recommend(e)}>
                         <label>
-                          Tu instrucción
+                          Proyecto
+                          <select
+                            value={aiProject || data.projects[0]?.id || ""}
+                            onChange={(e) => {
+                              setAIProject(e.target.value);
+                              setRec(null);
+                            }}
+                            required
+                          >
+                            {data.projects.map((p) => (
+                              <option key={p.id} value={p.id}>
+                                {p.name}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                        <label>
+                          ¿Qué querés hacer?
                           <textarea
-                            aria-label="Prompt recomendado"
-                            readOnly
-                            value={rec.prompt}
-                            rows={10}
+                            placeholder="Ej.: Corregir el audio online en iPhone sin tocar producción…"
+                            value={goal}
+                            maxLength={4000}
+                            onChange={(e) => {
+                              setGoal(e.target.value);
+                              setRec(null);
+                            }}
+                            required
+                            rows={6}
                           />
                         </label>
-                        <div className="button-row">
-                          <button
-                            className="button primary"
-                            onClick={() => void copy(rec.prompt)}
-                          >
-                            Copiar prompt
-                          </button>
-                          <button
-                            className="button secondary"
-                            disabled={saving}
-                            onClick={() =>
-                              void run(async () => {
-                                await store.put("prompts", {
-                                  id: uid(),
-                                  title: goal.slice(0, 200),
-                                  text: rec.prompt,
-                                  updatedAt: Date.now(),
-                                });
-                                setNotice("Prompt guardado en tu biblioteca.");
-                              })
-                            }
-                          >
-                            Guardar
-                          </button>
-                          <a
-                            className="button secondary"
-                            href={
-                              rec.tool === "Codex"
-                                ? "https://chatgpt.com/codex"
-                                : "https://chatgpt.com"
-                            }
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            Abrir herramienta
-                            <ArrowUpRight size={15} />
-                          </a>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles size={36} />
-                        <h2>Una intención, un camino.</h2>
-                        <p>
-                          Tu recomendación aparecerá acá.
-                          <br />
-                          Las reglas locales también funcionan offline.
-                        </p>
-                      </>
-                    )}
-                  </section>
-                </div>
+                        {import.meta.env.VITE_AI_ENDPOINT && (
+                          <label className="checkbox-label">
+                            <input
+                              type="checkbox"
+                              checked={useModel}
+                              onChange={(e) => setUseModel(e.target.checked)}
+                            />
+                            Usar modelo remoto (envía solo el objetivo; puede
+                            consumir cuota)
+                          </label>
+                        )}
+                        <button
+                          className="button primary full"
+                          disabled={
+                            aiBusy || !goal.trim() || !data.projects.length
+                          }
+                        >
+                          <Sparkles size={17} />
+                          {aiBusy ? "Analizando…" : "Recomendar flujo"}
+                        </button>
+                      </form>
+                    </section>
+                    <section
+                      className={`panel recommendation ${rec ? "" : "awaiting"}`}
+                      aria-live="polite"
+                    >
+                      {rec ? (
+                        <>
+                          <span className="eyebrow">
+                            {rec.source === "local"
+                              ? "REGLAS LOCALES · SIN COSTO DE API"
+                              : "CLASIFICACIÓN CON MODELO"}
+                          </span>
+                          <h2>{rec.tool}</h2>
+                          <p>{rec.reason}</p>
+                          <div className="next-step">
+                            <ChevronRight size={16} />
+                            {rec.next}
+                          </div>
+                          <label>
+                            Tu instrucción
+                            <textarea
+                              aria-label="Prompt recomendado"
+                              readOnly
+                              value={rec.prompt}
+                              rows={10}
+                            />
+                          </label>
+                          <div className="button-row">
+                            <button
+                              className="button primary"
+                              onClick={() => void copy(rec.prompt)}
+                            >
+                              Copiar prompt
+                            </button>
+                            <button
+                              className="button secondary"
+                              disabled={saving}
+                              onClick={() =>
+                                void run(async () => {
+                                  await store.put("prompts", {
+                                    id: uid(),
+                                    title: goal.slice(0, 200),
+                                    text: rec.prompt,
+                                    updatedAt: Date.now(),
+                                  });
+                                  setNotice(
+                                    "Prompt guardado en tu biblioteca.",
+                                  );
+                                })
+                              }
+                            >
+                              Guardar
+                            </button>
+                            <a
+                              className="button secondary"
+                              href={
+                                rec.tool === "Codex"
+                                  ? "https://chatgpt.com/codex"
+                                  : "https://chatgpt.com"
+                              }
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              Abrir herramienta
+                              <ArrowUpRight size={15} />
+                            </a>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles size={36} />
+                          <h2>Una intención, un camino.</h2>
+                          <p>
+                            Tu recomendación aparecerá acá.
+                            <br />
+                            Las reglas locales también funcionan offline.
+                          </p>
+                        </>
+                      )}
+                    </section>
+                  </div>
+                </>
               )}
               {tab === "prompts" && (
                 <>
@@ -1289,7 +1325,7 @@ export default function App() {
                     <section className="panel">
                       <h2>Acerca de tu espacio</h2>
                       <p className="muted">
-                        FACU AI HUB 5.0
+                        FACU AI HUB 5.1 STAGING
                         <br />
                         Diseñado para elegir, crear y avanzar.
                       </p>
@@ -1327,6 +1363,22 @@ export default function App() {
           </button>
         ))}
       </nav>
+      {continuing && (
+        <Modal
+          title={`Continuar ${continuing.name}`}
+          onClose={() => setContinuing(null)}
+        >
+          <Continuation
+            project={continuing}
+            tasks={data.tasks}
+            copy={copy}
+            edit={() => {
+              setEditing({ ...continuing });
+              setContinuing(null);
+            }}
+          />
+        </Modal>
+      )}
       {editing && (
         <Modal
           title={
@@ -1346,6 +1398,10 @@ export default function App() {
                   (editing.github && !safeUrl(editing.github))
                 )
                   throw Error("Usá enlaces http o https válidos.");
+                if (editing.chatUrl && !validChatUrl(editing.chatUrl))
+                  throw Error(
+                    "Usá el enlace HTTPS real de una conversación de ChatGPT: https://chatgpt.com/c/…",
+                  );
                 await store.put("projects", {
                   ...editing,
                   name: editing.name.trim(),
@@ -1434,6 +1490,37 @@ export default function App() {
                 value={editing.next}
                 onChange={(e) =>
                   setEditing({ ...editing, next: e.target.value })
+                }
+              />
+            </label>
+            <label>
+              Chat principal (opcional)
+              <input
+                type="url"
+                maxLength={2048}
+                value={editing.chatUrl || ""}
+                onChange={(e) =>
+                  setEditing({ ...editing, chatUrl: e.target.value })
+                }
+                placeholder="https://chatgpt.com/c/…"
+              />
+            </label>
+            <label>
+              Fecha prevista (reportada)
+              <input
+                type="date"
+                value={
+                  editing.dueAt
+                    ? new Date(editing.dueAt).toISOString().slice(0, 10)
+                    : ""
+                }
+                onChange={(e) =>
+                  setEditing({
+                    ...editing,
+                    dueAt: e.target.value
+                      ? Date.parse(e.target.value + "T23:59:59Z")
+                      : 0,
+                  })
                 }
               />
             </label>

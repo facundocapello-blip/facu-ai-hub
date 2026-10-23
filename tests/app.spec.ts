@@ -194,3 +194,91 @@ test("independent local tabs retain each other’s writes", async ({
   ).toBeVisible();
   await second.close();
 });
+
+test("V5.1 priorities, chat links, offline postponement and task resolution", async ({
+  page,
+  context,
+}) => {
+  await page.setViewportSize({ width: 430, height: 932 });
+  await page.goto("./");
+  await page
+    .getByRole("button", { name: "Editar Henris Gallery", exact: true })
+    .click();
+  await page
+    .getByLabel("Chat principal (opcional)")
+    .fill("https://chatgpt.com/c/abc-123");
+  await page.getByLabel("Fecha prevista (reportada)").fill("2026-01-01");
+  await page.getByRole("button", { name: "Guardar proyecto" }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await page
+    .getByLabel("Nueva tarea", { exact: true })
+    .fill("Resolver bloqueo de Henris");
+  await page
+    .getByLabel("Proyecto de la tarea", { exact: true })
+    .selectOption({ label: "Henris Gallery" });
+  await page.getByRole("button", { name: "Agregar", exact: true }).click();
+  await page
+    .getByRole("navigation", { name: "Navegación móvil" })
+    .getByRole("button", { name: "IA Hub" })
+    .click();
+  const actions = page.locator(".action-card");
+  await expect(actions).toHaveCount(3);
+  const henris = actions.filter({
+    has: page.getByRole("heading", {
+      name: "Resolver bloqueo de Henris",
+      exact: true,
+    }),
+  });
+  await expect(henris).toBeVisible();
+  await expect(henris).toContainText("Fecha vencida");
+  await henris.getByRole("button", { name: "Continuar con ChatGPT" }).click();
+  await expect(page.getByLabel("Resumen para ChatGPT")).toContainText(
+    "Versión reportada",
+  );
+  await expect(page.getByLabel("Resumen para ChatGPT")).toContainText(
+    "Resolver bloqueo de Henris",
+  );
+  await expect(
+    page.getByRole("link", { name: "Abrir chat principal" }),
+  ).toHaveAttribute("href", "https://chatgpt.com/c/abc-123");
+  await page.getByRole("button", { name: "Cerrar", exact: true }).click();
+  await page.evaluate(() => navigator.serviceWorker.ready);
+  await page.reload();
+  await page.waitForFunction(() => !!navigator.serviceWorker.controller);
+  await context.setOffline(true);
+  await page
+    .getByRole("navigation", { name: "Navegación móvil" })
+    .getByRole("button", { name: "IA Hub" })
+    .click();
+  await henris.getByRole("button", { name: "Posponer 24 h" }).click();
+  await expect(henris).toHaveCount(0);
+  await page.reload();
+  await page
+    .getByRole("navigation", { name: "Navegación móvil" })
+    .getByRole("button", { name: "IA Hub" })
+    .click();
+  await expect(henris).toHaveCount(0);
+  await page.getByText("Revisar acciones pospuestas", { exact: true }).click();
+  await page.getByRole("button", { name: "Reactivar tarea" }).click();
+  await expect(henris).toBeVisible();
+  await henris.getByRole("button", { name: "Resolver", exact: true }).click();
+  await expect(henris).toHaveCount(0);
+  await context.setOffline(false);
+  await page.reload();
+  await expect(
+    page.locator(".task-row").filter({ hasText: "Resolver bloqueo de Henris" }),
+  ).toContainText("Terminado");
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+  const mamba = page
+    .getByRole("article")
+    .filter({
+      has: page.getByRole("heading", { name: "Mambapalabra", exact: true }),
+    });
+  await expect(
+    mamba.getByRole("button", { name: "Agregar enlace" }),
+  ).toBeVisible();
+});

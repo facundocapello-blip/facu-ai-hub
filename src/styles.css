@@ -1213,3 +1213,17 @@ select {
     transition: none !important;
   }
 }
+
+.assistant-actions {
+  margin-bottom: 24px;
+}
+.action-card {
+  padding: 18px 0;
+  border-bottom: 1px solid #30374a;
+}
+.action-card p {
+  overflow-wrap: anywhere;
+}
+.action-card .button-row {
+  flex-wrap: wrap;
+}
