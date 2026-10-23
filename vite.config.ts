@@ -41,18 +41,21 @@ export default defineConfig({
           },
         ],
       },
+      integration: {
+        beforeBuildServiceWorker(options) {
+          if (process.env.VITE_CDN_PREVIEW === "true") {
+            options.workbox.additionalManifestEntries = (
+              options.workbox.additionalManifestEntries || []
+            ).filter(
+              (entry) =>
+                !(typeof entry === "string" ? entry : entry.url).endsWith(
+                  ".webmanifest",
+                ),
+            );
+          }
+        },
+      },
       workbox: {
-        manifestTransforms:
-          process.env.VITE_CDN_PREVIEW === "true"
-            ? [
-                async (entries) => ({
-                  manifest: entries.filter(
-                    (entry) => !entry.url.endsWith(".webmanifest"),
-                  ),
-                  warnings: [],
-                }),
-              ]
-            : [],
         globPatterns: [
           process.env.VITE_CDN_PREVIEW === "true"
             ? "**/*.{js,css,html,svg,woff2}"
