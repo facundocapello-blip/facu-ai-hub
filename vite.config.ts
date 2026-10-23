@@ -9,12 +9,18 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: "prompt",
-      includeAssets: [
-        "icon.svg",
-        "icon-192.png",
-        "icon-512.png",
-        "apple-touch-icon.png",
-      ],
+      // The preview CDN redirects PNGs to GitHub Raw; Workbox cannot precache
+      // redirected cross-origin responses. Keep normal hosting unchanged.
+      includeManifestIcons: process.env.VITE_CDN_PREVIEW !== "true",
+      includeAssets:
+        process.env.VITE_CDN_PREVIEW === "true"
+          ? ["icon.svg"]
+          : [
+              "icon.svg",
+              "icon-192.png",
+              "icon-512.png",
+              "apple-touch-icon.png",
+            ],
       manifest: {
         name: "FACU AI HUB",
         short_name: "FACU HUB",
@@ -36,7 +42,11 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ["**/*.{js,css,html,svg,png,woff2}"],
+        globPatterns: [
+          process.env.VITE_CDN_PREVIEW === "true"
+            ? "**/*.{js,css,html,svg,woff2}"
+            : "**/*.{js,css,html,svg,png,woff2}",
+        ],
         navigateFallback: "index.html",
         cleanupOutdatedCaches: true,
         maximumFileSizeToCacheInBytes: 3000000,

@@ -3,6 +3,7 @@ export function validChatUrl(value: string): boolean {
   try {
     const u = new URL(value);
     return (
+      value === `${u.origin}${u.pathname}` &&
       u.protocol === "https:" &&
       ["chatgpt.com", "chat.openai.com"].includes(u.hostname) &&
       !u.username &&

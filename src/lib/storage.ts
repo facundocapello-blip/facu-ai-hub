@@ -46,8 +46,9 @@ export function isProject(x: unknown): x is Project {
     text(x.notes) &&
     text(x.next, 1000) &&
     date(x.updatedAt) &&
-    (x.dueAt === undefined || date(x.dueAt)) &&
-    (x.snoozedUntil === undefined || date(x.snoozedUntil)) &&
+    (x.dueAt === undefined || (date(x.dueAt) && x.dueAt <= 8640000000000000)) &&
+    (x.snoozedUntil === undefined ||
+      (date(x.snoozedUntil) && x.snoozedUntil <= 8640000000000000)) &&
     (x.chatUrl === undefined ||
       (text(x.chatUrl, 2048) &&
         (!x.chatUrl || validChatUrl(String(x.chatUrl)))))
@@ -63,8 +64,9 @@ export function isTask(x: unknown): x is Task {
     priority(x.priority) &&
     ["Pendiente", "En curso", "Terminado"].includes(String(x.status)) &&
     date(x.updatedAt) &&
-    (x.dueAt === undefined || date(x.dueAt)) &&
-    (x.snoozedUntil === undefined || date(x.snoozedUntil))
+    (x.dueAt === undefined || (date(x.dueAt) && x.dueAt <= 8640000000000000)) &&
+    (x.snoozedUntil === undefined ||
+      (date(x.snoozedUntil) && x.snoozedUntil <= 8640000000000000))
   );
 }
 export function isSession(x: unknown): x is Session {

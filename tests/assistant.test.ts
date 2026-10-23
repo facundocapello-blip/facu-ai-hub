@@ -88,3 +88,10 @@ it("accepts only real official chat URL shapes and preserves optional fields in 
     }),
   ).toThrow();
 });
+
+it("rejects out-of-range optional dates before they can crash the assistant", () => {
+  const d = seedWorkspace();
+  d.projects[0].dueAt = 1e100;
+  expect(() => validateWorkspace(d)).toThrow();
+  expect(validChatUrl("https://chatgpt.com/c/a#")).toBe(false);
+});
