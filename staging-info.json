@@ -1,0 +1,7 @@
+{
+  "version": "5.1.0",
+  "sourceCommit": "fc242a89b3500c697daa1d740639a06af258b74a",
+  "sourceBranch": "staging/v5.1-issue-1",
+  "storage": "local-only",
+  "paidServices": false
+}
