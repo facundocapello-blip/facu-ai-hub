@@ -42,6 +42,17 @@ export default defineConfig({
         ],
       },
       workbox: {
+        manifestTransforms:
+          process.env.VITE_CDN_PREVIEW === "true"
+            ? [
+                async (entries) => ({
+                  manifest: entries.filter(
+                    (entry) => !entry.url.endsWith(".webmanifest"),
+                  ),
+                  warnings: [],
+                }),
+              ]
+            : [],
         globPatterns: [
           process.env.VITE_CDN_PREVIEW === "true"
             ? "**/*.{js,css,html,svg,woff2}"
