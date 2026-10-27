@@ -153,7 +153,16 @@ export default function App() {
     if (!project || !goal.trim()) return;
     setAiBusy(true);
     store.setError("");
-    const local = buildRecommendation(goal, project);
+    const view = reconcileProject(project, masterRegistry.snapshot?.projects || []);
+    // Solo para la recomendación: no modifica el workspace ni escribe en Firebase.
+    const effectiveProject = view.master ? {
+      ...project,
+      status: view.displayedStatus,
+      version: view.displayedStatus,
+      next: view.displayedNext,
+      url: view.displayedUrl,
+    } : project;
+    const local = buildRecommendation(goal, effectiveProject);
     setRec(local);
     try {
       if (useModel) {
@@ -186,7 +195,7 @@ export default function App() {
           throw Error(
             "Respuesta de intención inválida. Se usaron reglas locales.",
           );
-        setRec(buildRecommendation(goal, project, result.intent as Intent));
+        setRec(buildRecommendation(goal, effectiveProject, result.intent as Intent));
       }
     } catch (e) {
       store.setError(message(e));
