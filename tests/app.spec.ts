@@ -241,7 +241,7 @@ test("V5.1 priorities, chat links, offline postponement and task resolution", as
   await page.getByText("Revisar acciones pospuestas", { exact: true }).click();
   await page.getByRole("button", { name: "Reactivar tarea" }).click();
   await expect(henris).toBeVisible();
-  await henris.getByRole("button", { name: "Resolver", exact: true }).click();
+  await henris.getByRole("button", { name: "Marcar tarea terminada", exact: true }).click();
   await expect(henris).toHaveCount(0);
   await context.setOffline(false);
   await page.reload();
