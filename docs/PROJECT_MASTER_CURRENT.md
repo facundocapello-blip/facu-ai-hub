@@ -9,7 +9,7 @@
 | Prioridad | Proyecto | Estado más reciente | Evidencia / alcance | Próxima acción sin repetir trabajo | URL |
 |---|---|---|---|---|---|
 | P1 | Henris Gallery | STAGING publicada 21/10, AppSheet separado | GitHub main `2878a81`; web principal EXPERIENCE V1.0; STAGING Gemini Fusion URL responde. HTML 23/10 es candidato no comprobado. | No reabrir pruebas resueltas de AppSheet 1.000031; investigar candidato 23/10 solo si se recupera archivo. | https://facundocapello-blip.github.io/henris-gallery-experience/staging/henris-gemini-fusion-20261020/ |
-| P1 | FACU AI HUB | V5.0 en main; V5.1 candidata | Main `e3edbe1`; rama staging/v5.1-issue-1 `0b619f1` con workflow OK, sin publicación en producción; web online con proyectos desactualizados. | No reemplazar datos del usuario. Actualizar estados a través de fuente verificable y evaluar V5.1 en aislado. | https://facundocapello-blip.github.io/facu-ai-hub/ |
+| P1 | FACU AI HUB | V5.0 en main; V5.2 STAGING publicada 26/10 | Main `e3edbe1` preservada. V5.1 es base candidata; rama `staging/v5.2-master-registry` SHA `2525f30`. [PR #4](https://github.com/facundocapello-blip/facu-ai-hub/pull/4) con CI PASS. Deploy separado Vercel READY y contenido real consultado por HTTPS: muestra 26 proyectos, separa datos privados y auditoría; Firebase desactivado. QA iPhone físico aún no ejecutado. | Mantener V5.0 estable; cerrar QA móvil sobre V5.2 y evaluar promoción sólo con autorización. | https://facu-ai-hub-v52-staging-2hz6ib05c-facundocapello-8441.vercel.app/ |
 | P1 | Experiencia ChatGPT y control versiones | Vigilancia cada 6 h activa; registro PR #3 | GitHub 6 repositorios sin nuevos commits en main al 26/10. Últimas apps viven además en Vercel y Floot. | Extender vigilancia a aplicaciones fuera de GitHub; no volver a ejecutar pruebas antiguas aprobadas. | https://github.com/facundocapello-blip/facu-ai-hub/pull/3 |
 | P2 | Mambapalabra estable | Release B1.13.1 declarada estable | GitHub main `ce3caa3` es documentación RC6; release estable B1.13.1 separada; producción preservada. | No promocionar RC6 sin aprobación; evitar base B1.11 histórica. | https://facundocapello-blip.github.io/Mambapalabra/ |
 | P2 | Mambapalabra STAGING | B1.13.1 Fish398 RC6 online | Manifiesto HTTPS 26/10: 821 audios, velocidad 1.22; `main` de repo staging `e61b00a` NO representa el deploy RC6. | Pendiente evaluación auditiva/micrófono Safari físico, no rehacer CI ya exitoso. | https://facundocapello-blip.github.io/mambapalabra-staging/ |
@@ -47,6 +47,15 @@
 | punto-de-oro | 70500368884c3565fbd5aab6e392612c99be5131 | 19/09 |
 
 **No se detectaron nuevos commits en main** respecto al inventario del 24/10. Algunas ramas STAGING y las aplicaciones Floot/Vercel contienen estados más recientes.
+
+## Publicación V5.2 STAGING — 26/10/2026
+
+- **Vercel proyecto independiente:** `facu-ai-hub-v52-staging` (`prj_dO6F2CPzcQWr6HFCqcm4rBXsVk6f`), deployment `dpl_EEjJm33ZKGeWa71tVg6boCW1rBVB` READY.
+- **URL HTTPS comprobada con renderizado JS:** https://facu-ai-hub-v52-staging-2hz6ib05c-facundocapello-8441.vercel.app/ . Contenido: panel 26 proyectos y estado actual auditado en paralelo al estado guardado sin sobrescritura.
+- **GitHub CI V5.2:** workflow `40435459275`, SUCCESS (pruebas y compilación). La rama V5.2 surge de la V5.1 candidata, no es un merge en `main`.
+- **Aislamiento:** en este proyecto de Vercel se estableció `VITE_LOCAL_ONLY=true`; no se inicia conexión Firebase. El sitio principal V5.0 no se modificó.
+- **No probado:** Safari físico y flujo real de sesiones del usuario; no afirmar QA móvil manual.
+- **Precaución:** el contenido inicial conserva ocho proyectos guardados/seeds históricos y los marca como potencialmente desactualizados, mientras un panel separado presenta los estados del maestro. Ningún dato privado fue actualizado automáticamente.
 
 ## Fuentes y confianza
 - **GitHub:** commits y README/PROJECT_STATUS, y el documento histórico [inventario 24/10](PROJECT_VERSION_INVENTORY_2026-10-24.md). Distinguir main, rama STAGING, release y workflow.
