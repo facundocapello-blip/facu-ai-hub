@@ -40,7 +40,7 @@ export function prioritizeReconciled(
       title: onlyProject ? view.displayedNext || "Revisar registro auditado" : action.title,
       reason: onlyProject
         ? "Registro auditado: " + view.master.status + " · Próximo paso verificado documentalmente"
-        : "Tarea guardada por vos (reconfirmar vigencia) · Registro auditado: " + view.master.status,
+        : action.reason + " · Tarea guardada por vos (reconfirmar vigencia) · Registro auditado: " + view.master.status,
     };
   });
 }
