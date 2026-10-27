@@ -1,4 +1,6 @@
 import { Assistant, Continuation } from "./components/Assistant";
+import { MasterRegistryPanel, MasterVersion, useMasterRegistry } from "./components/MasterRegistry";
+import { findMasterProject } from "./lib/masterRegistry";
 import { validChatUrl } from "./lib/assistant";
 import { useRef, useState, type FormEvent } from "react";
 import {
@@ -72,6 +74,7 @@ const blankProject = (): Project => ({
 });
 export default function App() {
   const store = useWorkspace();
+  const masterRegistry = useMasterRegistry();
   const { data, user, ready, online, pending, cached } = store;
   const [continuing, setContinuing] = useState<Project | null>(null);
   const [tab, setTab] = useState<Tab>("projects");
@@ -388,6 +391,7 @@ export default function App() {
               )}
               {tab === "projects" && (
                 <>
+                  <MasterRegistryPanel state={masterRegistry} />
                   <div className="metrics">
                     <div>
                       <span>PROYECTOS</span>
@@ -437,11 +441,13 @@ export default function App() {
                               {p.notes ||
                                 "Agregá contexto para tu próximo paso."}
                             </p>
+                            <small className="muted">MI DATO GUARDADO · PUEDE ESTAR DESACTUALIZADO</small>
                             <div className="project-state">
                               <span className="state-dot" />
                               {p.status}
                               <span className="version">{p.version}</span>
                             </div>
+                            <MasterVersion name={p.name} state={masterRegistry} />
                             {p.next && (
                               <div className="next-step">
                                 <ChevronRight size={15} />
@@ -1163,6 +1169,8 @@ export default function App() {
           <Continuation
             project={continuing}
             tasks={data.tasks}
+            master={findMasterProject(continuing.name, masterRegistry.snapshot?.projects || [])}
+            masterSource={masterRegistry.mode === "live" ? "GitHub en línea" : masterRegistry.mode === "cache" ? "copia local del registro" : "no disponible"}
             copy={copy}
             edit={() => {
               setEditing({ ...continuing });
