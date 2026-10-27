@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowUpRight, RefreshCcw, ShieldCheck } from "lucide-react";
 import {
   findMasterProject, MASTER_DOCUMENT_URL, MASTER_RAW_URL,
@@ -29,7 +29,12 @@ function cached(): MasterRegistry | null {
 export function useMasterRegistry(): RegistryState {
   const [snapshot, setSnapshot] = useState<MasterRegistry | null>(() => cached() || packagedMaster);
   const [mode, setMode] = useState<Mode>("loading");
+  const lastCheck = useRef(0);
+  const requestInFlight = useRef(false);
   const refresh = useCallback(async (signal?: AbortSignal) => {
+    if (requestInFlight.current) return;
+    requestInFlight.current = true;
+    lastCheck.current = Date.now();
     try {
       const response = await fetch(MASTER_RAW_URL, { cache: "no-store", signal });
       if (!response.ok) throw Error("No se pudo consultar el registro.");
@@ -43,12 +48,30 @@ export function useMasterRegistry(): RegistryState {
       if (signal?.aborted) return;
       setMode("cache");
       setSnapshot((current) => current || cached() || packagedMaster);
+    } finally {
+      requestInFlight.current = false;
     }
   }, []);
   useEffect(() => {
     const controller = new AbortController();
     void refresh(controller.signal);
-    return () => controller.abort();
+    // Se reconcilia solo cuando la web está abierta. No hay proceso en segundo plano oculto.
+    const check = () => {
+      if (document.visibilityState === "visible" &&
+          Date.now() - lastCheck.current >= 6 * 60 * 60 * 1000)
+        void refresh();
+    };
+    const interval = window.setInterval(check, 15 * 60 * 1000);
+    document.addEventListener("visibilitychange", check);
+    window.addEventListener("focus", check);
+    window.addEventListener("online", check);
+    return () => {
+      controller.abort();
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", check);
+      window.removeEventListener("focus", check);
+      window.removeEventListener("online", check);
+    };
   }, [refresh]);
   return { snapshot, mode, refresh };
 }
@@ -96,8 +119,8 @@ export function MasterRegistryPanel({ state }: { state: RegistryState }) {
           <span className="eyebrow"><ShieldCheck size={14} /> CONTINUIDAD DE PROYECTOS</span>
           <h2 id="master-title">Último registro auditado</h2>
           <p className="muted">
-            Información revisada por el coordinador, distinta de los datos personales del Hub.
-            No se reemplazan tus proyectos ni se repiten pruebas antiguas por defecto.
+            Estados y próximos pasos conciliados automáticamente con el inventario público.
+            Tus notas, tareas y proyectos originales se conservan. La actualización se consulta al abrir la app y cada 6 horas mientras esté abierta.
           </p>
         </div>
         <button className="button secondary master-refresh" type="button"
