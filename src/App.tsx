@@ -464,6 +464,12 @@ export default function App() {
                                 <span>{reconciled.get(p.id)?.displayedNext || p.next}</span>
                               </div>
                             )}
+                            {p.next && (
+                              <div className="personal-next">
+                                <small className="muted">MI PRÓXIMO PASO GUARDADO · PUEDE SER HISTÓRICO</small>
+                                <p className="project-notes">{p.next}</p>
+                              </div>
+                            )}
                             <small className="muted">MIS NOTAS · PUEDEN SER HISTÓRICAS</small>
                             <p className="project-notes">
                               {p.notes || "Sin notas guardadas."}
