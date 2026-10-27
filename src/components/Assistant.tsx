@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
-import { continuation, prioritize, validChatUrl } from "../lib/assistant";
+import { continuation, validChatUrl } from "../lib/assistant";
+import { prioritizeReconciled } from "../lib/reconciliation";
 import type { Project, Workspace, Collection, Entity } from "../lib/types";
+import type { MasterProject } from "../lib/masterRegistry";
 export function Assistant({
   data,
   source,
@@ -9,9 +11,11 @@ export function Assistant({
   continueProject,
   run,
   saving,
+  master,
 }: {
   data: Workspace;
   source: string;
+  master: MasterProject[];
   put: (k: Collection, e: Entity) => Promise<void>;
   edit: (p: Project) => void;
   continueProject: (p: Project) => void;
@@ -23,14 +27,15 @@ export function Assistant({
     const id = setInterval(() => setNow(Date.now()), 30000);
     return () => clearInterval(id);
   }, []);
-  const actions = prioritize(data, now);
+  const actions = prioritizeReconciled(data, master, now);
   return (
     <section className="panel assistant-actions">
       <span className="eyebrow">REGLAS LOCALES · SIN COSTO DE API</span>
       <h2>Tus próximas acciones</h2>
       <p className="muted">
-        Fuente: {source}. Estados, versiones y fechas reportados por vos; no
-        verificados automáticamente.
+        Fuente: {source}. Cuando existe registro auditado, se prioriza su último
+        paso conocido sin sobrescribir tus datos personales. Tareas propias pendientes
+        pueden requerir reconfirmación.
       </p>
       {!actions.length && (
         <p>
@@ -44,29 +49,23 @@ export function Assistant({
           <h3>{a.title}</h3>
           <p>{a.reason}</p>
           <div className="button-row">
-            <button
-              className="button primary"
-              disabled={saving}
-              onClick={() =>
-                void run(() =>
-                  a.task
-                    ? put("tasks", {
-                        ...a.task,
-                        status: "Terminado",
-                        updatedAt: Date.now(),
-                      })
-                    : put("projects", {
-                        ...a.project,
-                        next: "",
-                        status: "Pendiente de definir próximo paso",
-                        snoozedUntil: Date.now() + 86400000,
-                        updatedAt: Date.now(),
-                      }),
-                )
-              }
-            >
-              Resolver
-            </button>
+            {a.task && (
+              <button
+                className="button primary"
+                disabled={saving}
+                onClick={() =>
+                  void run(() =>
+                    put("tasks", {
+                      ...a.task!,
+                      status: "Terminado",
+                      updatedAt: Date.now(),
+                    }),
+                  )
+                }
+              >
+                Marcar tarea terminada
+              </button>
+            )}
             <button
               className="button secondary"
               disabled={saving}
@@ -95,9 +94,8 @@ export function Assistant({
         </article>
       ))}
       <p className="muted small">
-        Resolver completa la tarea existente. Para un próximo paso de proyecto,
-        lo limpia y pide definir otro mañana. Posponer conserva los datos y
-        oculta la acción durante 24 horas.
+        Marcar tarea terminada afecta únicamente esa tarea. Los pasos auditados son
+        sugerencias: no borran notas ni proyectos. Posponer oculta la acción 24 horas.
       </p>
       <details>
         <summary>Revisar acciones pospuestas</summary>
@@ -152,15 +150,31 @@ export function Assistant({
 export function Continuation({
   project,
   tasks,
+  master,
+  masterSource,
   copy,
   edit,
 }: {
   project: Project;
   tasks: Workspace["tasks"];
+  master?: MasterProject;
+  masterSource: string;
   copy: (s: string) => Promise<void>;
   edit: () => void;
 }) {
-  const prompt = continuation(project, tasks);
+  const audit = master
+    ? "FUENTE PRIORITARIA — REGISTRO AUDITADO (" + masterSource + "):\n" +
+      "Proyecto: " + master.name + "\n" +
+      "Estado comprobado documentalmente: " + master.status + "\n" +
+      "Evidencia: " + master.evidence + "\n" +
+      "Próximo paso del registro: " + master.next + "\n" +
+      "No repetir pruebas históricas sin demostrar que el error sigue vigente. " +
+      "Distinguir producción, candidata y STAGING.\n\n"
+    : "SIN REGISTRO AUDITADO: no inventar una versión nueva.\n\n";
+  const prompt = audit + "DATOS PRIVADOS GUARDADOS (pueden estar desactualizados; conservarlos pero no asumirlos vigentes):\n" +
+    continuation(project, tasks) +
+    "\n\nAntes de proponer ejecución, contrastá cualquier tarea guardada con la evidencia auditada. " +
+    "No sobrescribir producción ni borrar datos personales sin autorización.";
   return (
     <>
       <p>

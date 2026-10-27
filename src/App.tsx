@@ -1,4 +1,7 @@
 import { Assistant, Continuation } from "./components/Assistant";
+import { MasterRegistryPanel, useMasterRegistry } from "./components/MasterRegistry";
+import { findMasterProject } from "./lib/masterRegistry";
+import { reconcileProject } from "./lib/reconciliation";
 import { validChatUrl } from "./lib/assistant";
 import { useRef, useState, type FormEvent } from "react";
 import {
@@ -72,7 +75,9 @@ const blankProject = (): Project => ({
 });
 export default function App() {
   const store = useWorkspace();
+  const masterRegistry = useMasterRegistry();
   const { data, user, ready, online, pending, cached } = store;
+  const reconciled = new Map(data.projects.map((p) => [p.id, reconcileProject(p, masterRegistry.snapshot?.projects || [])]));
   const [continuing, setContinuing] = useState<Project | null>(null);
   const [tab, setTab] = useState<Tab>("projects");
   const [query, setQuery] = useState("");
@@ -148,7 +153,16 @@ export default function App() {
     if (!project || !goal.trim()) return;
     setAiBusy(true);
     store.setError("");
-    const local = buildRecommendation(goal, project);
+    const view = reconcileProject(project, masterRegistry.snapshot?.projects || []);
+    // Solo para la recomendación: no modifica el workspace ni escribe en Firebase.
+    const effectiveProject = view.master ? {
+      ...project,
+      status: view.displayedStatus,
+      version: view.displayedStatus,
+      next: view.displayedNext,
+      url: view.displayedUrl,
+    } : project;
+    const local = buildRecommendation(goal, effectiveProject);
     setRec(local);
     try {
       if (useModel) {
@@ -181,7 +195,7 @@ export default function App() {
           throw Error(
             "Respuesta de intención inválida. Se usaron reglas locales.",
           );
-        setRec(buildRecommendation(goal, project, result.intent as Intent));
+        setRec(buildRecommendation(goal, effectiveProject, result.intent as Intent));
       }
     } catch (e) {
       store.setError(message(e));
@@ -388,6 +402,7 @@ export default function App() {
               )}
               {tab === "projects" && (
                 <>
+                  <MasterRegistryPanel state={masterRegistry} />
                   <div className="metrics">
                     <div>
                       <span>PROYECTOS</span>
@@ -433,21 +448,39 @@ export default function App() {
                             </div>
                             <span className="category">{p.category}</span>
                             <h3>{p.name}</h3>
-                            <p className="project-notes">
-                              {p.notes ||
-                                "Agregá contexto para tu próximo paso."}
-                            </p>
+                            <small className="muted">
+                              {reconciled.get(p.id)?.master
+                                ? "ESTADO CONCILIADO AUTOMÁTICAMENTE · FUENTE AUDITADA"
+                                : "ESTADO GUARDADO · SIN REGISTRO AUDITADO"}
+                            </small>
                             <div className="project-state">
                               <span className="state-dot" />
-                              {p.status}
-                              <span className="version">{p.version}</span>
+                              {reconciled.get(p.id)?.displayedStatus || p.status}
+                              {!reconciled.get(p.id)?.master && <span className="version">{p.version}</span>}
                             </div>
-                            {p.next && (
+                            {(reconciled.get(p.id)?.displayedNext || p.next) && (
                               <div className="next-step">
                                 <ChevronRight size={15} />
-                                <span>{p.next}</span>
+                                <span>{reconciled.get(p.id)?.displayedNext || p.next}</span>
                               </div>
                             )}
+                            {p.next && (
+                              <div className="personal-next">
+                                <small className="muted">MI PRÓXIMO PASO GUARDADO · PUEDE SER HISTÓRICO</small>
+                                <p className="project-notes">{p.next}</p>
+                              </div>
+                            )}
+                            <small className="muted">MIS NOTAS · PUEDEN SER HISTÓRICAS</small>
+                            <p className="project-notes">
+                              {p.notes || "Sin notas guardadas."}
+                            </p>
+                            <details className="personal-history">
+                              <summary>Ver versión, notas y tareas guardadas</summary>
+                              <p><b>Mi versión:</b> {p.version || "Sin informar"} · {p.status}</p>
+                              <p><b>Mis notas:</b> {p.notes || "Sin notas"}</p>
+                              <p><b>Mi próximo paso:</b> {p.next || "Sin definir"}</p>
+                              <p>Estos datos se conservan intactos; la vista conciliada no los reemplaza.</p>
+                            </details>
                             <button
                               className="button secondary full"
                               onClick={() => setContinuing(p)}
@@ -473,9 +506,9 @@ export default function App() {
                                     GitHub <ArrowUpRight size={12} />
                                   </a>
                                 )}
-                                {safeUrl(p.url) && (
+                                {safeUrl(reconciled.get(p.id)?.displayedUrl || p.url) && (
                                   <a
-                                    href={safeUrl(p.url)!}
+                                    href={safeUrl(reconciled.get(p.id)?.displayedUrl || p.url)!}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                   >
@@ -654,6 +687,7 @@ export default function App() {
                     continueProject={setContinuing}
                     run={run}
                     saving={saving}
+                    master={masterRegistry.snapshot?.projects || []}
                   />
                   <div className="two-columns">
                     <section className="panel">
@@ -1163,6 +1197,8 @@ export default function App() {
           <Continuation
             project={continuing}
             tasks={data.tasks}
+            master={findMasterProject(continuing.name, masterRegistry.snapshot?.projects || [])}
+            masterSource={masterRegistry.mode === "live" ? "GitHub en línea" : masterRegistry.mode === "cache" ? "copia local del registro" : "no disponible"}
             copy={copy}
             edit={() => {
               setEditing({ ...continuing });
