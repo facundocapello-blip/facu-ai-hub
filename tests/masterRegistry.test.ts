@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { findMasterProject, parseMasterRegistry } from "../src/lib/masterRegistry";
+import { packagedMaster } from "../src/data/masterSnapshot";
 
 const md = [
   "# Registro maestro actual — 26/10/2026 (ART)",
@@ -28,4 +29,11 @@ describe("registro maestro de solo lectura", () => {
     expect(() => parseMasterRegistry("texto viejo")).toThrow();
     expect(() => parseMasterRegistry("a".repeat(151000))).toThrow();
   });
+});
+
+it("la copia inicial incluye 26 proyectos y diferencia Mambapalabra estable / RC6 STAGING", () => {
+  expect(packagedMaster.projects).toHaveLength(26);
+  expect(findMasterProject("Mambapalabra", packagedMaster.projects)?.status).toContain("B1.13.1");
+  expect(findMasterProject("Mambapalabra STAGING", packagedMaster.projects)?.status).toContain("RC6");
+  expect(findMasterProject("Henris Gallery", packagedMaster.projects)?.status).toContain("STAGING");
 });
