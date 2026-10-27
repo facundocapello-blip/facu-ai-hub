@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { continuation, prioritize, validChatUrl } from "../lib/assistant";
 import type { Project, Workspace, Collection, Entity } from "../lib/types";
+import type { MasterProject } from "../lib/masterRegistry";
 export function Assistant({
   data,
   source,
@@ -152,15 +153,25 @@ export function Assistant({
 export function Continuation({
   project,
   tasks,
+  master,
+  masterSource,
   copy,
   edit,
 }: {
   project: Project;
   tasks: Workspace["tasks"];
+  master?: MasterProject;
+  masterSource: string;
   copy: (s: string) => Promise<void>;
   edit: () => void;
 }) {
-  const prompt = continuation(project, tasks);
+  const prompt = continuation(project, tasks) + (master
+    ? "\n\nESTADO DEL REGISTRO MAESTRO (" + masterSource + ", fuente auditada, no equivale a QA en iPhone):\n" +
+      "Versión/estado identificado: " + master.status + "\n" +
+      "Evidencia: " + master.evidence + "\n" +
+      "Próxima acción del registro: " + master.next + "\n" +
+      "Si el dato guardado del Hub entra en conflicto con este registro, investigar la evidencia más reciente antes de repetir pruebas o cambiar producción.\n"
+    : "\n\nNo hay coincidencia confirmada de este proyecto con el registro maestro. No inventar una versión nueva.\n");
   return (
     <>
       <p>
