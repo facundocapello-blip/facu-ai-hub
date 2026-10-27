@@ -5,6 +5,7 @@ import {
   parseMasterRegistry, REGISTRY_CACHE_KEY,
   type MasterRegistry, type MasterProject,
 } from "../lib/masterRegistry";
+import { packagedMaster } from "../data/masterSnapshot";
 import "./MasterRegistry.css";
 
 type Mode = "loading" | "live" | "cache" | "error";
@@ -26,7 +27,7 @@ function cached(): MasterRegistry | null {
  * Ninguna respuesta remota se copia a Firestore, IndexedDB ni al espacio del usuario.
  */
 export function useMasterRegistry(): RegistryState {
-  const [snapshot, setSnapshot] = useState<MasterRegistry | null>(cached);
+  const [snapshot, setSnapshot] = useState<MasterRegistry | null>(() => cached() || packagedMaster);
   const [mode, setMode] = useState<Mode>("loading");
   const refresh = useCallback(async (signal?: AbortSignal) => {
     try {
@@ -40,8 +41,8 @@ export function useMasterRegistry(): RegistryState {
       try { localStorage.setItem(REGISTRY_CACHE_KEY, markdown); } catch { /* sin caché */ }
     } catch {
       if (signal?.aborted) return;
-      setMode((current) => current === "live" || cached() ? "cache" : "error");
-      setSnapshot((current) => current || cached());
+      setMode("cache");
+      setSnapshot((current) => current || cached() || packagedMaster);
     }
   }, []);
   useEffect(() => {
@@ -108,7 +109,7 @@ export function MasterRegistryPanel({ state }: { state: RegistryState }) {
         {state.mode === "live"
           ? "Consultado desde GitHub"
           : state.mode === "cache"
-            ? "Sin conexión a GitHub · mostrando última copia guardada"
+            ? "Sin conexión a GitHub · mostrando copia disponible"
             : state.mode === "loading"
               ? "Consultando registro…"
               : "Registro no disponible. Tus datos del Hub siguen intactos."}
