@@ -464,6 +464,10 @@ export default function App() {
                                 <span>{reconciled.get(p.id)?.displayedNext || p.next}</span>
                               </div>
                             )}
+                            <small className="muted">MIS NOTAS · PUEDEN SER HISTÓRICAS</small>
+                            <p className="project-notes">
+                              {p.notes || "Sin notas guardadas."}
+                            </p>
                             <details className="personal-history">
                               <summary>Ver versión, notas y tareas guardadas</summary>
                               <p><b>Mi versión:</b> {p.version || "Sin informar"} · {p.status}</p>
