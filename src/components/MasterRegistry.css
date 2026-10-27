@@ -1,0 +1,28 @@
+.master-panel{margin:12px 0 28px}
+.master-panel-top{display:flex;justify-content:space-between;gap:18px;align-items:flex-start}
+.master-panel-top h2{margin:8px 0}
+.master-panel-top .eyebrow{display:flex;align-items:center;gap:6px}
+.master-panel-top p{max-width:680px;font-size:13px;margin:0}
+.master-refresh{white-space:nowrap;display:flex;align-items:center;gap:7px}
+.master-source{font-size:12px;color:#8dd5db;margin:14px 0 12px;line-height:1.6}
+.master-list{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.master-item{border:1px solid #2c3749;background:#111c2b;border-radius:12px;padding:12px 14px;min-width:0}
+.master-item-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.master-item-heading strong{font-size:14px;overflow-wrap:anywhere}
+.master-item-heading span{font-size:10px;color:#a5bcc9;border:1px solid #334255;border-radius:7px;padding:2px 7px;flex-shrink:0}
+.master-item p{font-size:13px;line-height:1.5;color:#d1e0e9;margin:6px 0}
+.master-item details{font-size:12px;color:#a8b6c7;margin-top:7px}
+.master-item summary{cursor:pointer;min-height:29px;color:#8fdcec}
+.master-item details p{font-size:12px;overflow-wrap:anywhere}
+.master-item details a,.master-source-link{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:#87dfea;overflow-wrap:anywhere}
+.master-source-link{margin-top:16px;max-width:100%}
+.master-toggle{margin-top:12px;width:100%}
+.master-version{border-left:2px solid #57c3d5;background:#102334;border-radius:0 8px 8px 0;padding:9px 11px;margin:10px 0}
+.master-version small,.master-version span{display:block;font-size:11px;line-height:1.4;color:#93aabc}
+.master-version strong{display:block;font-size:13px;font-weight:650;margin:3px 0;overflow-wrap:anywhere}
+@media(max-width:720px){
+  .master-panel-top{flex-direction:column;gap:12px}
+  .master-refresh{min-height:44px;width:100%;justify-content:center}
+  .master-list{grid-template-columns:1fr}
+  .master-item{padding:12px}
+}
