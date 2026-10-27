@@ -1,6 +1,7 @@
 import { Assistant, Continuation } from "./components/Assistant";
-import { MasterRegistryPanel, MasterVersion, useMasterRegistry } from "./components/MasterRegistry";
+import { MasterRegistryPanel, useMasterRegistry } from "./components/MasterRegistry";
 import { findMasterProject } from "./lib/masterRegistry";
+import { reconcileProject } from "./lib/reconciliation";
 import { validChatUrl } from "./lib/assistant";
 import { useRef, useState, type FormEvent } from "react";
 import {
@@ -76,6 +77,7 @@ export default function App() {
   const store = useWorkspace();
   const masterRegistry = useMasterRegistry();
   const { data, user, ready, online, pending, cached } = store;
+  const reconciled = new Map(data.projects.map((p) => [p.id, reconcileProject(p, masterRegistry.snapshot?.projects || [])]));
   const [continuing, setContinuing] = useState<Project | null>(null);
   const [tab, setTab] = useState<Tab>("projects");
   const [query, setQuery] = useState("");
@@ -437,23 +439,29 @@ export default function App() {
                             </div>
                             <span className="category">{p.category}</span>
                             <h3>{p.name}</h3>
-                            <p className="project-notes">
-                              {p.notes ||
-                                "Agregá contexto para tu próximo paso."}
-                            </p>
-                            <small className="muted">MI DATO GUARDADO · PUEDE ESTAR DESACTUALIZADO</small>
+                            <small className="muted">
+                              {reconciled.get(p.id)?.master
+                                ? "ESTADO CONCILIADO AUTOMÁTICAMENTE · FUENTE AUDITADA"
+                                : "ESTADO GUARDADO · SIN REGISTRO AUDITADO"}
+                            </small>
                             <div className="project-state">
                               <span className="state-dot" />
-                              {p.status}
-                              <span className="version">{p.version}</span>
+                              {reconciled.get(p.id)?.displayedStatus || p.status}
+                              {!reconciled.get(p.id)?.master && <span className="version">{p.version}</span>}
                             </div>
-                            <MasterVersion name={p.name} state={masterRegistry} />
-                            {p.next && (
+                            {(reconciled.get(p.id)?.displayedNext || p.next) && (
                               <div className="next-step">
                                 <ChevronRight size={15} />
-                                <span>{p.next}</span>
+                                <span>{reconciled.get(p.id)?.displayedNext || p.next}</span>
                               </div>
                             )}
+                            <details className="personal-history">
+                              <summary>Ver versión, notas y tareas guardadas</summary>
+                              <p><b>Mi versión:</b> {p.version || "Sin informar"} · {p.status}</p>
+                              <p><b>Mis notas:</b> {p.notes || "Sin notas"}</p>
+                              <p><b>Mi próximo paso:</b> {p.next || "Sin definir"}</p>
+                              <p>Estos datos se conservan intactos; la vista conciliada no los reemplaza.</p>
+                            </details>
                             <button
                               className="button secondary full"
                               onClick={() => setContinuing(p)}
@@ -479,9 +487,9 @@ export default function App() {
                                     GitHub <ArrowUpRight size={12} />
                                   </a>
                                 )}
-                                {safeUrl(p.url) && (
+                                {safeUrl(reconciled.get(p.id)?.displayedUrl || p.url) && (
                                   <a
-                                    href={safeUrl(p.url)!}
+                                    href={safeUrl(reconciled.get(p.id)?.displayedUrl || p.url)!}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                   >
@@ -660,6 +668,7 @@ export default function App() {
                     continueProject={setContinuing}
                     run={run}
                     saving={saving}
+                    master={masterRegistry.snapshot?.projects || []}
                   />
                   <div className="two-columns">
                     <section className="panel">
