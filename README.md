@@ -2,6 +2,19 @@
 
 Centro de control personal en React + TypeScript, Tailwind compilado y Vite. Diseño oscuro con navegación móvil, safe areas de iPhone y uso local sin cuenta. Reemplaza el HTML anterior; no requiere servicios externos para proyectos, tareas, prompts, tracking o recomendaciones locales.
 
+## Qué entra en este repositorio
+
+Solo el Hub: código React/TypeScript, tests, reglas de Firebase y su documentación.
+
+- Una app, un juego o un experimento con vida propia va a su **propio repositorio**. Este
+  repo no se usa como hosting de otros productos.
+- Las ramas de trabajo del Hub viven acá mientras se desarrollan, pero cada una tiene que
+  ser Hub. Si una rama contiene otro producto, se separa y se borra.
+- Hecho el 2026-10-28: la branch `juego-piso-o-caos` se separó a
+  [`facundocapello-blip/piso-o-caos`](https://github.com/facundocapello-blip/piso-o-caos)
+  conservando sus 5 commits (`git subtree split`). Queda archivada como tag
+  `archivo/juego-piso-o-caos-20261028` por si hace falta volver atrás.
+
 ## Desarrollo
 
 Node 22 (`.nvmrc`), npm y navegador moderno. En esta máquina se verificó también con Node 24. Los procesos de instalación no despliegan nada.
