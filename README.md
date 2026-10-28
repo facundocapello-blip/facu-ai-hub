@@ -10,10 +10,9 @@ Solo el Hub: código React/TypeScript, tests, reglas de Firebase y su documentac
   repo no se usa como hosting de otros productos.
 - Las ramas de trabajo del Hub viven acá mientras se desarrollan, pero cada una tiene que
   ser Hub. Si una rama contiene otro producto, se separa y se borra.
-- Hecho el 2026-10-28: la branch `juego-piso-o-caos` se separó a
-  [`facundocapello-blip/piso-o-caos`](https://github.com/facundocapello-blip/piso-o-caos)
-  conservando sus 5 commits (`git subtree split`). Queda archivada como tag
-  `archivo/juego-piso-o-caos-20261028` por si hace falta volver atrás.
+- Caso de referencia (2026-10-28): la branch `juego-piso-o-caos` se separó del Hub y el
+  producto se descartó por decisión del dueño. Antes del borrado se comprobó que no
+  quedara nada del juego en `main` ni en los workflows.
 
 ## Desarrollo
 
