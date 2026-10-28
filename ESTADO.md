@@ -9,8 +9,11 @@ Actualizado: 2026-10-28
 
 ## Abierto
 - 3 PRs en borrador: **#2, #3, #4**. No mergear sin revisar.
-- `docs/PROJECT_MASTER_CURRENT.md` desactualizado: no sabe de Mambapalabra RC6 en producción
-  ni de Black Mamba V1.7M publicada. Es la Fase 2 del plan.
+- Datos iniciales de Mambapalabra y Black Mamba actualizados en `src/lib/seeds.ts` con los
+  estados/URLs verificados. `docs/PROJECT_MASTER_CURRENT.md` no existe en este checkout.
+- La app inicia con datos seed solo si el navegador no tiene un workspace previo. En el Hub ya
+  usado, editar seeds no cambia los registros guardados en IndexedDB; no migrarlos sin exportar
+  y revisar el respaldo.
 
 ## Trampas
 - Solo entra el Hub: un producto con vida propia va a su propio repo.

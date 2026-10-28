@@ -32,7 +32,10 @@ Después de pushear a `main`, esperar el workflow y verificar la URL en vivo.
 
 ## Estado conocido
 - 3 PRs en borrador: **#2, #3, #4**. No mergear sin revisar.
-- `docs/PROJECT_MASTER_CURRENT.md` está desactualizado: no sabe de Mambapalabra RC6 en
-  producción ni de Black Mamba V1.7M publicada. Se corrige en la Fase 2 del plan.
+- El inventario inicial se define en `src/lib/seeds.ts`; se copia al espacio local del
+  navegador al iniciar. No existe `docs/PROJECT_MASTER_CURRENT.md` en este checkout.
+- Al cambiar los datos iniciales, distinguí estado confirmado de reportado y preservá Henris
+  Gallery (lo trabaja otra ventana). Los usuarios existentes no reciben automáticamente
+  cambios en seeds: la migración conserva sus datos de IndexedDB.
 - Los datos viven en IndexedDB del navegador. Cambiar de origen o de almacenamiento rompe la
   migración: no abrir el `index.html` con `file://` esperando ver los datos.
