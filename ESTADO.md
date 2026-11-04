@@ -1,13 +1,12 @@
 # ESTADO — FACU AI HUB
 
-Actualizado: 2026-11-02
+Actualizado: 2026-11-04
 
 ## Publicado
 - `https://facundocapello-blip.github.io/facu-ai-hub/` — rama `main`, 200 y consola sin errores (verificado 02/11). Versión visible en la app: **5.0**.
-- Publicado: `origin/main` `800d4c7`. Local en `8eea155` (seeds de Mambapalabra y Black Mamba con estado verificado), **sin pushear**.
+- Publicado: `origin/main` `361fd76` (seeds de Mambapalabra y Black Mamba con estado verificado + ESTADO actualizado). Local y remoto sincronizados.
 
 ## Abierto
-- Decidir si se pushea `8eea155`: cambia solo datos iniciales, no producto.
 - 3 PRs en borrador (#2, #3, #4). No mergear sin revisar.
 
 ## Trampas
