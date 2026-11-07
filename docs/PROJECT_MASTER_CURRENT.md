@@ -301,3 +301,11 @@
 - **REPORTADO:** AppSheet `1.000413` sigue sin verificación autenticada independiente. **CANDIDATA LOCAL:** BLACK MAMBA `V1.8/V1.8.1` solo conversacional, ZIP no accesible; Floot `V1.6` y GitHub `V1.7M` STAGING separados. **SIN VERIFICAR:** OCR real/Safari. Mambapalabra B1.13.1 ESTABLE y RC6 STAGING diferenciadas.
 - **Sin novedad:** resto de SHAs principales consultados, fechas Floot y últimos deploys Vercel READY. READY no equivale a QA funcional.
 
+
+
+## Seguimiento 07/11/2026 11:22 ART — Henris prueba guiada
+
+- **STAGING GitHub confirmado:** Henris `main` avanzó de `03d8dfc` a [`6b785b5`](https://github.com/facundocapello-blip/henris-gallery-experience/commit/6b785b50cf45c2ae01e91512e1c3c8820d77130d) (07/11 10:02 ART). El commit «Henris: agregar prueba guiada de cinco minutos» incorpora una sección de prueba en la propuesta Gemini aislada y el test `tests/prueba-cinco-minutos.test.js`; no modifica AppSheet ni la guía visual anterior.
+- **REPORTADO por OpenCode, no verificado independientemente:** `ESTADO-ACTUAL.txt` en Drive `modifiedTime=2026-11-07T13:10:20.907Z` (10:10 ART), aunque su encabezado interno sigue en 05/11, informa HTTP 200, consola limpia, igualdad HTML y workflow Pages `42375113646` exitoso para `6b785b5`. El conector de GitHub no devuelve workflows por SHA en este caso (consulta limitada a eventos PR), por lo que no elevar esta prueba funcional a confirmación propia. URL STAGING: https://facundocapello-blip.github.io/henris-gallery-experience/staging/henris-propuesta-gemini-20261106/ . `ESTADO.md` y `PROJECT_STATUS.md` mantienen referencias anteriores a la publicación: desfase documental, no regresión.
+- **REPORTADO:** AppSheet `1.000413` sin acceso autenticado independiente; **SIN VERIFICAR:** Safari/VoiceOver físico. **CANDIDATA LOCAL:** BLACK MAMBA V1.8/V1.8.1 solo conversacional, ZIP no accesible; Floot V1.6 y GitHub V1.7M siguen STAGING independientes. Mambapalabra B1.13.1 ESTABLE y RC6 STAGING siguen separadas.
+- **Sin otras novedades verificadas:** los cinco proyectos Floot mantienen fechas anteriores y los cuatro proyectos Vercel solicitados sus últimos deployments READY históricos. No se atribuye QA funcional a READY ni a HTTP 200. Sin cambios en main, producción, AppSheet, Drive o datos reales.
