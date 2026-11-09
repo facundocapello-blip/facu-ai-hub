@@ -1,3 +1,9 @@
+# Piloto V5.1 (rama de prueba)
+
+Implementación del Issue #1: prioridades explicadas, resolución/posposición sobre registros existentes y continuidad manual con ChatGPT. Ver [guía de staging y pendientes](docs/V5.1-STAGING.md). No fusionar ni desplegar sobre la versión estable. El build público de piloto usa datos locales; Auth/Firestore se validan con emuladores.
+
+La documentación histórica de V5.0 se conserva a continuación.
+
 # FACU AI HUB 5.0
 
 Centro de control personal en React + TypeScript, Tailwind compilado y Vite. Diseño oscuro con navegación móvil, safe areas de iPhone y uso local sin cuenta. Reemplaza el HTML anterior; no requiere servicios externos para proyectos, tareas, prompts, tracking o recomendaciones locales.

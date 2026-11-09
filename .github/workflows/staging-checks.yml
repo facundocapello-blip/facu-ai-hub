@@ -1,0 +1,33 @@
+name: V5.1 staging validation (no production deploy)
+on:
+  push:
+    branches: [staging/v5.1-issue-1]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm test
+      - run: ./scripts/staging-build.sh
+      - run: npm run test:e2e
+      - run: npm run test:auth
+      - run: npm run test:rules
+      - run: npm run test:cloud
+      - uses: actions/upload-artifact@v4
+        with:
+          name: facu-ai-hub-v5.1-staging
+          path: dist
+          retention-days: 7

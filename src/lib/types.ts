@@ -8,6 +8,9 @@ export interface Project {
   version: string;
   url: string;
   github: string;
+  chatUrl?: string;
+  dueAt?: number;
+  snoozedUntil?: number;
   notes: string;
   next: string;
   updatedAt: number;
@@ -16,6 +19,8 @@ export interface Task {
   id: string;
   projectId: string;
   title: string;
+  dueAt?: number;
+  snoozedUntil?: number;
   priority: Priority;
   status: "Pendiente" | "En curso" | "Terminado";
   updatedAt: number;

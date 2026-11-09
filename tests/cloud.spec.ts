@@ -43,6 +43,10 @@ test("Auth, account isolation, Firestore offline edits and reconnection", async 
   await page
     .getByLabel("Próximo paso", { exact: true })
     .fill("Cambio hecho offline");
+  await page
+    .getByLabel("Chat principal (opcional)")
+    .fill("https://chatgpt.com/c/cloud-test-123");
+  await page.getByLabel("Fecha prevista (reportada)").fill("2026-12-31");
   await page.getByRole("button", { name: "Guardar proyecto" }).click();
   await expect(
     page.getByText("Cambio hecho offline", { exact: true }),
@@ -55,6 +59,17 @@ test("Auth, account isolation, Firestore offline edits and reconnection", async 
   await expect(
     page.getByText("Cambio hecho offline", { exact: true }),
   ).toBeVisible();
+  await page
+    .getByRole("article")
+    .filter({
+      has: page.getByRole("heading", { name: "SAP HCM PT/TM", exact: true }),
+    })
+    .getByRole("button", { name: "Continuar con ChatGPT" })
+    .click();
+  await expect(
+    page.getByRole("link", { name: "Abrir chat principal" }),
+  ).toHaveAttribute("href", "https://chatgpt.com/c/cloud-test-123");
+  await page.getByRole("button", { name: "Cerrar", exact: true }).click();
   const other = await browser.newPage();
   await other.goto("/");
   await other

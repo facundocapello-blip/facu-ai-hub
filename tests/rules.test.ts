@@ -97,3 +97,21 @@ it("validates tasks, prompts and session transitions", async () => {
   );
   await assertFails(setDoc(doc(db, "intentLimits/alice"), { count: 0 }));
 });
+
+it("accepts V5.1 optional metadata, denies invalid fields and preserves V5.0", async () => {
+  const db = env.authenticatedContext("alice").firestore();
+  const ref = doc(db, "users/alice/projects/sap");
+  await assertSucceeds(
+    setDoc(ref, {
+      ...seedProjects[7],
+      chatUrl: "https://chatgpt.com/c/abc-123",
+      dueAt: 1,
+      snoozedUntil: 100,
+    }),
+  );
+  await assertFails(
+    setDoc(ref, { ...seedProjects[7], chatUrl: "https://evil.test/c/abc" }),
+  );
+  await assertFails(setDoc(ref, { ...seedProjects[7], snoozedUntil: -1 }));
+  await assertSucceeds(setDoc(ref, { ...seedProjects[7] }));
+});
