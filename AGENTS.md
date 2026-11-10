@@ -39,3 +39,24 @@ Después de pushear a `main`, esperar el workflow y verificar la URL en vivo.
   cambios en seeds: la migración conserva sus datos de IndexedDB.
 - Los datos viven en IndexedDB del navegador. Cambiar de origen o de almacenamiento rompe la
   migración: no abrir el `index.html` con `file://` esperando ver los datos.
+
+---
+
+## Skills y plugins recomendados en DeepSeek Harness
+
+Mapa curado para este proyecto. Las skills se cargan con la herramienta `skill`;
+los plugins ya están instalados en el perfil de DSH.
+
+**Skills**
+
+- `impeccable` — El hub es una interfaz: tarjetas, navegación, estados.
+- `genui` — Componentes interactivos cuando el hub muestra datos.
+
+**Plugins**
+
+- **plugin-dock (Hub)** — El hub local de DSH convive con este proyecto.
+- **better-sidebar** — Editar y revisar el sitio en paralelo.
+
+**Comandos**
+
+`/arrancar` · `/estado` · `/revisar` · `/cerrar`
